@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Users, CalendarDays, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
-  const { bookings: allBookings, loading } = useAdmin();
+  const { bookings: allBookings, loading, error } = useAdmin();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   
   const todayBookings = allBookings.filter(b => b.date === todayStr && b.status !== 'cancelled');
@@ -43,6 +43,11 @@ export default function Dashboard() {
       </div>
 
       <div className="admin-table-wrap">
+        {error && (
+          <div style={{ padding: '16px 20px', color: 'var(--brick)', fontWeight: 'bold' }}>
+            {error}
+          </div>
+        )}
         <div style={{padding: '16px 20px', borderBottom: '1px solid var(--line)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px'}}>
           <CalendarDays size={18} />
           Prenotazioni di Oggi ({format(new Date(), 'dd/MM/yyyy')})

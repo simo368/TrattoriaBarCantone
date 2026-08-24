@@ -7,7 +7,7 @@ import { Users, Phone, FileText, CheckCircle2, XCircle, Search, Trash2, Calendar
 
 export default function GestisciPrenotazioni() {
   const [dateFilter, setDateFilter] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const { bookings: allBookings, loading } = useAdmin();
+  const { bookings: allBookings, loading, error } = useAdmin();
 
   // Filter bookings locally based on the selected date
   const filteredBookings = allBookings.filter(b => b.date === dateFilter);
@@ -54,6 +54,11 @@ export default function GestisciPrenotazioni() {
       </div>
 
       <div className="admin-table-wrap">
+        {error && (
+          <div style={{ padding: '16px 20px', color: 'var(--brick)', fontWeight: 'bold' }}>
+            {error}
+          </div>
+        )}
         <table className="admin-table">
           <thead>
             <tr>

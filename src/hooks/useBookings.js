@@ -82,15 +82,21 @@ export function useBookings(dateFilter = null) {
 export function useAllBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const q = query(collection(db, 'bookings'), orderBy('date', 'desc'), orderBy('time', 'asc'));
+    const q = query(collection(db, 'bookings'));
     const unsub = onSnapshot(q, snap => {
       setBookings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
-    }, () => setLoading(false));
+      setError(null);
+    }, (err) => {
+      console.error(err);
+      setError('Impossibile caricare le prenotazioni. Verifica le regole e gli indici Firestore.');
+      setLoading(false);
+    });
     return unsub;
   }, []);
 
-  return { bookings, loading };
+  return { bookings, loading, error };
 }
