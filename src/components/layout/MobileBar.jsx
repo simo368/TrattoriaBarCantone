@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { settingsStore } from '../../utils/localStore';
+import { useSettings } from '../../hooks/useSettings';
 import { Phone, Utensils, MapPin } from 'lucide-react';
 
 export default function MobileBar() {
-  const settings = settingsStore.get();
+  const { settings } = useSettings();
   
   return (
     <nav className="mobile-bar">

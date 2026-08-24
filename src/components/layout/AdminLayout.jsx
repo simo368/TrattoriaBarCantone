@@ -1,21 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
-import { authStore } from '../../utils/localStore';
+import { useAuth } from '../../contexts/AuthContext';
 import { LayoutDashboard, CalendarDays, UtensilsCrossed, LogOut, ExternalLink, Menu as MenuIcon } from 'lucide-react';
 
 export default function AdminLayout() {
-  const isLogged = authStore.isLogged();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false); }, [location]);
 
-  if (!isLogged) return <Navigate to="/admin/login" />;
+  if (!user) return <Navigate to="/admin/login" />;
 
-  const handleLogout = () => {
-    authStore.logout();
-    window.location.href = '/admin/login';
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (

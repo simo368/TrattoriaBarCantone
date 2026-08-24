@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isNonEmptyString(val) {
+      return val is string && val.size() > 0 && val.size() <= 200;
+    }
+
+    function isValidDate(val) {
+      return val is string && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidTime(val) {
+      return val is string && val.matches('^[0-9]{2}:[0-9]{2}$');
+    }
+
+    function isValidGuests(val) {
+      return val is int && val >= 1 && val <= 30;
+    }
+
+    function isValidBookingCreate() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['name', 'phone', 'date', 'time', 'guests'])
+        && isNonEmptyString(d.name)
+        && isNonEmptyString(d.phone)
+        && isValidDate(d.date)
+        && isValidTime(d.time)
+        && isValidGuests(d.guests)
+        && (!('email' in d) || d.email is string)
+        && (!('notes' in d) || d.notes is string)
+        && (!('status' in d) || d.status == 'confirmed');
+    }
+
+    // Cancellazione dal link email: solo status -> cancelled (+ updatedAt).
+    function isPublicCancel() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status == 'cancelled';
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if isValidBookingCreate();
+      allow read, delete: if isSignedIn();
+      allow update: if isSignedIn() || isPublicCancel();
+    }
+
+    match /menu/{itemId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /gallery/{photoId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /slotOccupancy/{slotId} {
+      allow read: if true;
+      allow create, update: if request.auth != null || request.resource.data.covers is int && request.resource.data.covers >= 0;
+    }
+  }
+}

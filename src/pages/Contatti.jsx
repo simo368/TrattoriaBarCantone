@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { settingsStore } from '../utils/localStore';
+import { useSettings } from '../hooks/useSettings';
 
 export default function Contatti() {
-  const settings = settingsStore.get();
+  const { settings } = useSettings();
 
   return (
     <main style={{ paddingTop: '76px' }}>

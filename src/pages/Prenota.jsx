@@ -1,12 +1,15 @@
-import { useState } from 'react';
-import { format, addDays } from 'date-fns';
+import { useState, useMemo } from 'react';
+import { format, addDays, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useBookings } from '../hooks/useBookings';
+import { useSettings } from '../hooks/useSettings';
+import { generateSlots, getAvailableSlots } from '../utils/availability';
 import { CheckCircle2, CalendarDays, Users, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Prenota() {
-  const { createBooking } = useBookings();
+  const { createBooking, bookings } = useBookings();
+  const { settings } = useSettings();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -20,10 +23,23 @@ export default function Prenota() {
   const [completed, setCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const availableSlots = ['12:00', '12:30', '13:00', '13:30', '14:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30'];
+  const selectedDate = useMemo(() => parseISO(formData.date), [formData.date]);
+  const closedDays = settings.hours?.closedDays ?? [];
+  const isClosed = closedDays.includes(formData.date);
+
+  const allSlots = useMemo(
+    () => isClosed ? [] : generateSlots(selectedDate, settings.hours?.schedule),
+    [selectedDate, settings.hours?.schedule, isClosed]
+  );
+
+  const availableSlots = useMemo(
+    () => isClosed ? [] : getAvailableSlots(selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot),
+    [selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot, isClosed]
+  );
 
   const handleNext = () => {
     if (step === 1 && (!formData.date || !formData.time)) return toast.error("Seleziona data e orario");
+    if (step === 1 && isClosed) return toast.error("Il locale è chiuso in questa data");
     if (step === 2 && !formData.guests) return toast.error("Seleziona il numero di persone");
     setStep(step + 1);
   };
@@ -34,11 +50,15 @@ export default function Prenota() {
     
     setSubmitting(true);
     try {
-      await createBooking(formData);
+      await createBooking(formData, settings.maxCoversPerSlot);
       setCompleted(true);
     } catch (err) {
       console.error(err);
-      toast.error("Errore durante il salvataggio. Riprova.");
+      if (err.message === 'SLOT_FULL') {
+        toast.error('Slot non più disponibile, riprova');
+      } else {
+        toast.error("Errore durante il salvataggio. Riprova.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -102,15 +122,30 @@ export default function Prenota() {
                 </div>
                 
                 <label className="form-label mb-2" style={{display:'block'}}>Orari disponibili</label>
-                <div className="slots-grid mb-4">
-                  {availableSlots.map(slot => (
-                    <button 
-                      key={slot} 
-                      className={`slot-btn ${formData.time === slot ? 'selected' : ''}`}
-                      onClick={() => setFormData({...formData, time: slot})}
-                    >{slot}</button>
-                  ))}
-                </div>
+                {isClosed && (
+                  <p className="text-muted text-center py-4">Il locale è chiuso in questa data.</p>
+                )}
+                {!isClosed && allSlots.length === 0 && (
+                  <p className="text-muted text-center py-4">Nessun orario configurato per questa giornata.</p>
+                )}
+                {!isClosed && allSlots.length > 0 && availableSlots.length === 0 && (
+                  <p className="text-muted text-center py-4">Tutti gli orari sono al completo per questa data.</p>
+                )}
+                {!isClosed && availableSlots.length > 0 && (
+                  <div className="slots-grid mb-4">
+                    {allSlots.map(slot => {
+                      const isAvailable = availableSlots.includes(slot);
+                      return (
+                        <button 
+                          key={slot} 
+                          className={`slot-btn ${formData.time === slot ? 'selected' : ''} ${!isAvailable ? 'full' : ''}`}
+                          onClick={() => isAvailable && setFormData({...formData, time: slot})}
+                          disabled={!isAvailable}
+                        >{slot}</button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <button className="btn btn-primary btn-full mt-4" onClick={handleNext}>
                   Continua <ArrowRight size={18} />

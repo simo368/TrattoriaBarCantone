@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { authStore } from '../../utils/localStore';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminLogin() {
+  const { user, login } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  if (authStore.isLogged()) {
+  const [submitting, setSubmitting] = useState(false);
+
+  if (user) {
     return <Navigate to="/admin" />;
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (authStore.login(password)) {
-      window.location.href = '/admin'; // Force reload to update context
-    } else {
-      toast.error('Password errata');
+    setSubmitting(true);
+    try {
+      await login(email, password);
+    } catch {
+      toast.error('Credenziali non valide');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -28,21 +34,32 @@ export default function AdminLogin() {
         </div>
         <form onSubmit={handleLogin}>
           <div className="form-group mb-4">
-            <label className="form-label">Password di accesso</label>
-            <input 
-              type="password" 
-              className="form-input" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              placeholder="Inserisci la password"
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              className="form-input"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@esempio.it"
               autoFocus
+              required
             />
           </div>
-          <button type="submit" className="btn btn-primary btn-full">Accedi</button>
+          <div className="form-group mb-4">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Inserisci la password"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary btn-full" disabled={submitting}>
+            {submitting ? 'Accesso in corso...' : 'Accedi'}
+          </button>
         </form>
-        <p className="text-muted text-sm center mt-4">
-          Password di default: <strong>cantone2024</strong>
-        </p>
       </div>
     </div>
   );

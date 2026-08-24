@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 // Public Pages
 import Home from './pages/Home';
 import Prenota from './pages/Prenota';
+import CancellaPrenotazione from './pages/CancellaPrenotazione';
 import MenuPublic from './pages/MenuPublic';
 import ChiSiamo from './pages/ChiSiamo';
 import Contatti from './pages/Contatti';
@@ -40,6 +41,7 @@ function App() {
           <Route path="/chi-siamo" element={<ChiSiamo />} />
           <Route path="/contatti" element={<Contatti />} />
           <Route path="/prenota" element={<Prenota />} />
+          <Route path="/prenota/cancella/:id" element={<CancellaPrenotazione />} />
         </Route>
         
         <Route path="/admin/login" element={<AdminLogin />} />

@@ -20,7 +20,7 @@ export async function sendConfirmationEmail(booking) {
     booking_time:  booking.time,
     booking_guests: booking.guests,
     booking_id:    booking.id,
-    cancel_link:   `${window.location.origin}/prenota/cancella/${booking.id}`,
+    cancel_link:   `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/?$/, '/')}#/prenota/cancella/${booking.id}`,
   }, PUBLIC_KEY);
 }
 

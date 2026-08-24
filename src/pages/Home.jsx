@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { settingsStore } from '../utils/localStore';
+import { useSettings } from '../hooks/useSettings';
 import { Clock, MapPin, Utensils, Phone } from 'lucide-react';
 
 export default function Home() {
-  const settings = settingsStore.get();
+  const { settings } = useSettings();
 
   return (
     <main id="home">

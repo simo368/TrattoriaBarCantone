@@ -1,12 +1,16 @@
 // src/hooks/useBookings.js
 import { useState, useEffect } from 'react';
 import {
-  collection, addDoc, updateDoc, deleteDoc, doc,
-  query, where, orderBy, onSnapshot, serverTimestamp
+  collection, updateDoc, deleteDoc, doc,
+  query, where, orderBy, onSnapshot, serverTimestamp,
+  runTransaction
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { format } from 'date-fns';
 import { sendConfirmationEmail, notifyRestaurant } from '../utils/emailService';
+
+export async function cancelBooking(id) {
+  await updateDoc(doc(db, 'bookings', id), { status: 'cancelled', updatedAt: serverTimestamp() });
+}
 
 export function useBookings(dateFilter = null) {
   const [bookings, setBookings] = useState([]);
@@ -30,26 +34,39 @@ export function useBookings(dateFilter = null) {
     return unsub;
   }, [dateFilter]);
 
-  // Crea nuova prenotazione + invia email automatica
-  const createBooking = async (data) => {
-    const booking = {
-      ...data,
-      status:    'confirmed', // conferma automatica
-      createdAt: serverTimestamp(),
-    };
-    const ref = await addDoc(collection(db, 'bookings'), booking);
-    const withId = { ...booking, id: ref.id };
-    // Email asincrona (non blocca)
+  // Crea nuova prenotazione con transazione atomica per evitare race condition
+  const createBooking = async (data, maxCoversPerSlot = 40) => {
+    const { date, time, guests } = data;
+    const occupancyRef = doc(db, 'slotOccupancy', `${date}_${time}`);
+    const bookingRef = doc(collection(db, 'bookings'));
+
+    await runTransaction(db, async (tx) => {
+      const occSnap = await tx.get(occupancyRef);
+      const currentCovers = occSnap.exists() ? occSnap.data().covers : 0;
+      const newTotal = currentCovers + Number(guests);
+
+      if (newTotal > maxCoversPerSlot) {
+        throw new Error('SLOT_FULL');
+      }
+
+      const booking = {
+        ...data,
+        status:    'confirmed',
+        createdAt: serverTimestamp(),
+      };
+
+      tx.set(bookingRef, booking);
+      tx.set(occupancyRef, { covers: newTotal, date, time }, { merge: true });
+    });
+
+    const withId = { ...data, status: 'confirmed', createdAt: new Date().toISOString(), id: bookingRef.id };
     sendConfirmationEmail(withId).catch(console.warn);
     notifyRestaurant(withId).catch(console.warn);
-    return ref.id;
+    return bookingRef.id;
   };
 
   const updateBooking = async (id, data) =>
     updateDoc(doc(db, 'bookings', id), { ...data, updatedAt: serverTimestamp() });
-
-  const cancelBooking = async (id) =>
-    updateDoc(doc(db, 'bookings', id), { status: 'cancelled', updatedAt: serverTimestamp() });
 
   const deleteBooking = async (id) =>
     deleteDoc(doc(db, 'bookings', id));

@@ -1,7 +1,7 @@
 // src/utils/availability.js
 // Calcola gli slot disponibili per una data, in base agli orari di apertura e prenotazioni esistenti
 
-import { format, parseISO, setHours, setMinutes, isAfter, isBefore, addMinutes } from 'date-fns';
+import { format, setHours, setMinutes, isAfter, addMinutes } from 'date-fns';
 
 /**
  * Genera tutti gli slot di 30 minuti per una giornata, in base allo schedule.
