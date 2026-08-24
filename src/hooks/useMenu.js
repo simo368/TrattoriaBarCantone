@@ -1,6 +1,6 @@
 // src/hooks/useMenu.js
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, serverTimestamp, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const CATEGORIES = ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
