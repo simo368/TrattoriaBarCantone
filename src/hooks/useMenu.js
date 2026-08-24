@@ -54,7 +54,7 @@ export function useMenu() {
   }, []);
 
   const addDish = (category, data) =>
-    addDoc(collection(db, 'menu'), { ...data, category, createdAt: serverTimestamp(), order: Date.now() });
+    addDoc(collection(db, 'menu'), { ...data, category, active: true, soldOut: false, createdAt: serverTimestamp(), order: Date.now() });
 
   const updateDish = (id, data) =>
     updateDoc(doc(db, 'menu', id), { ...data, updatedAt: serverTimestamp() });

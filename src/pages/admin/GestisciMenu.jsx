@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useMenu } from '../../hooks/useMenu';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Ban } from 'lucide-react';
 
 export default function GestisciMenu() {
   const { menu, loading, addDish, updateDish, deleteDish, CATEGORIES } = useMenu();
   const [activeCat, setActiveCat] = useState('primi');
   const [isEditing, setIsEditing] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', desc: '', price: '', category: '' });
+  const [editForm, setEditForm] = useState({ name: '', desc: '', price: '', category: '', active: true, soldOut: false });
 
   const categories = CATEGORIES || ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
 
-  const currentDishes = Array.isArray(menu) 
+  const currentDishes = Array.isArray(menu)
     ? menu.filter(m => m.category === activeCat)
     : (menu[activeCat] || []);
 
@@ -22,7 +22,7 @@ export default function GestisciMenu() {
 
   const handleNew = () => {
     setIsEditing('new');
-    setEditForm({ name: '', desc: '', price: '', category: activeCat });
+    setEditForm({ name: '', desc: '', price: '', category: activeCat, active: true, soldOut: false });
   };
 
   const handleSave = async (e) => {
@@ -50,6 +50,24 @@ export default function GestisciMenu() {
       } catch (err) {
         toast.error("Errore durante l'eliminazione");
       }
+    }
+  };
+
+  const toggleActive = async (dish) => {
+    try {
+      await updateDish(dish.id, { ...dish, active: !dish.active });
+      toast.success(dish.active ? 'Piatto disattivato' : 'Piatto attivato');
+    } catch {
+      toast.error("Errore aggiornamento");
+    }
+  };
+
+  const toggleSoldOut = async (dish) => {
+    try {
+      await updateDish(dish.id, { ...dish, soldOut: !dish.soldOut });
+      toast.success(dish.soldOut ? 'Piatto disponibile' : 'Piatto segnato come esaurito');
+    } catch {
+      toast.error("Errore aggiornamento");
     }
   };
 
@@ -82,20 +100,32 @@ export default function GestisciMenu() {
               <th>Nome</th>
               <th>Descrizione</th>
               <th>Prezzo</th>
+              <th style={{textAlign: 'center'}}>Attivo</th>
+              <th style={{textAlign: 'center'}}>Esaurito</th>
               <th style={{textAlign: 'right'}}>Azioni</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="4" className="center text-muted py-4">Caricamento piatti da Firestore...</td></tr>
+              <tr><td colSpan="6" className="center text-muted py-4">Caricamento piatti da Firestore...</td></tr>
             ) : currentDishes.length === 0 ? (
-              <tr><td colSpan="4" className="center text-muted py-4">Nessun piatto presente in questa categoria.</td></tr>
+              <tr><td colSpan="6" className="center text-muted py-4">Nessun piatto presente in questa categoria.</td></tr>
             ) : (
               currentDishes.map((dish, i) => (
-                <tr key={dish.id || i}>
+                <tr key={dish.id || i} style={{ opacity: dish.active === false ? 0.6 : 1 }}>
                   <td><strong style={{ fontSize: '1.05rem' }}>{dish.name}</strong></td>
                   <td><div style={{ maxWidth: '400px', lineHeight: 1.5 }}>{dish.desc}</div></td>
                   <td><strong>{dish.price ? `${dish.price} €` : '-'}</strong></td>
+                  <td style={{textAlign: 'center'}}>
+                    <button className="btn btn-outline btn-sm" onClick={() => toggleActive(dish)} title={dish.active ? 'Disattiva' : 'Attiva'}>
+                      {dish.active ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </button>
+                  </td>
+                  <td style={{textAlign: 'center'}}>
+                    <button className="btn btn-outline btn-sm" onClick={() => toggleSoldOut(dish)} title={dish.soldOut ? 'Rendi disponibile' : 'Segna esaurito'}>
+                      <Ban size={14} />
+                    </button>
+                  </td>
                   <td style={{textAlign: 'right'}}>
                     {dish.id && (
                       <>
@@ -137,6 +167,16 @@ export default function GestisciMenu() {
               <div className="form-group mb-4">
                 <label className="form-label">Prezzo (€)</label>
                 <input type="number" step="0.5" className="form-input" value={editForm.price} onChange={e => setEditForm({...editForm, price: e.target.value})} />
+              </div>
+              <div className="form-group mb-4" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editForm.active} onChange={e => setEditForm({...editForm, active: e.target.checked})} />
+                  <span>Attivo nel menu</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editForm.soldOut} onChange={e => setEditForm({...editForm, soldOut: e.target.checked})} />
+                  <span>Esaurito</span>
+                </label>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setIsEditing(null)}>Annulla</button>

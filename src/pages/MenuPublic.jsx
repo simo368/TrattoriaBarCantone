@@ -10,8 +10,8 @@ export default function MenuPublic() {
 
   // Flatten or use array for active category
   const currentDishes = Array.isArray(menu) 
-    ? menu.filter(m => m.category === activeTab)
-    : (menu[activeTab] || []);
+    ? menu.filter(m => m.category === activeTab && m.active !== false)
+    : (menu[activeTab] || []).filter(m => m.active !== false);
 
   return (
     <main className="booking-page" style={{ paddingTop: '60px' }}>
@@ -46,10 +46,11 @@ export default function MenuPublic() {
           ) : (
             <div className="dishes-grid">
               {currentDishes.map((dish, i) => (
-                <article key={dish.id || i} className="dish-card">
+                <article key={dish.id || i} className="dish-card" style={{ opacity: dish.soldOut ? 0.6 : 1 }}>
                   <h3 className="dish-name">{dish.name}</h3>
                   <p className="dish-desc">{dish.desc}</p>
                   {dish.price && <div className="dish-price">{dish.price} €</div>}
+                  {dish.soldOut && <div style={{ marginTop: 8, color: 'var(--brick)', fontWeight: 700, fontSize: '0.85rem' }}>Esaurito</div>}
                 </article>
               ))}
             </div>

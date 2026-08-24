@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format, addDays, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useBookings } from '../hooks/useBookings';
@@ -22,6 +22,12 @@ export default function Prenota() {
   });
   const [completed, setCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const selectedDate = useMemo(() => parseISO(formData.date), [formData.date]);
   const closedDays = settings.hours?.closedDays ?? [];
@@ -32,14 +38,27 @@ export default function Prenota() {
     [selectedDate, settings.hours?.schedule, isClosed]
   );
 
-  const availableSlots = useMemo(
-    () => isClosed ? [] : getAvailableSlots(selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot),
-    [selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot, isClosed]
-  );
+  const todayStr = useMemo(() => format(now, 'yyyy-MM-dd'), [now]);
+  const isToday = formData.date === todayStr;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const availableSlots = useMemo(() => {
+    if (isClosed) return [];
+    const slots = getAvailableSlots(selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot);
+    if (!isToday) return slots;
+    return slots.filter(slot => {
+      const [h, m] = slot.split(':').map(Number);
+      return (h * 60 + m) > currentMinutes;
+    });
+  }, [selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot, isClosed, isToday, currentMinutes]);
 
   const handleNext = () => {
     if (step === 1 && (!formData.date || !formData.time)) return toast.error("Seleziona data e orario");
     if (step === 1 && isClosed) return toast.error("Il locale è chiuso in questa data");
+    if (step === 1 && isToday) {
+      const [h, m] = formData.time.split(':').map(Number);
+      if ((h * 60 + m) <= currentMinutes) return toast.error("Orario non più disponibile");
+    }
     if (step === 2 && !formData.guests) return toast.error("Seleziona il numero di persone");
     setStep(step + 1);
   };
@@ -47,6 +66,10 @@ export default function Prenota() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) return toast.error("Nome e telefono obbligatori");
+    if (isToday) {
+      const [h, m] = formData.time.split(':').map(Number);
+      if ((h * 60 + m) <= currentMinutes) return toast.error("Orario non più disponibile");
+    }
     
     setSubmitting(true);
     try {
@@ -135,12 +158,15 @@ export default function Prenota() {
                   <div className="slots-grid mb-4">
                     {allSlots.map(slot => {
                       const isAvailable = availableSlots.includes(slot);
+                      const [h, m] = slot.split(':').map(Number);
+                      const isPast = isToday && ((h * 60 + m) <= currentMinutes);
+                      const disabled = !isAvailable || isPast;
                       return (
                         <button 
                           key={slot} 
-                          className={`slot-btn ${formData.time === slot ? 'selected' : ''} ${!isAvailable ? 'full' : ''}`}
-                          onClick={() => isAvailable && setFormData({...formData, time: slot})}
-                          disabled={!isAvailable}
+                          className={`slot-btn ${formData.time === slot ? 'selected' : ''} ${disabled ? 'full' : ''}`}
+                          onClick={() => !disabled && setFormData({...formData, time: slot})}
+                          disabled={disabled}
                         >{slot}</button>
                       );
                     })}
