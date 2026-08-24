@@ -5,11 +5,11 @@ export default function ChiSiamo() {
   const [currentImg, setCurrentImg] = useState(0);
   
   const gallery = [
-    { src: '/img/hero.jpg', label: 'La sala' },
-    { src: '/img/gallery-tortelli.jpg', label: 'Tortelli verdi' },
-    { src: '/img/gallery-gnocco.jpg', label: 'Gnocco fritto' },
-    { src: '/img/gallery-sala.jpg', label: "L'ambiente" },
-    { src: '/img/gallery-dolci.jpg', label: 'Dolci della casa' }
+    { src: './img/hero.jpg', label: 'La sala' },
+    { src: './img/gallery-tortelli.jpg', label: 'Tortelli verdi' },
+    { src: './img/gallery-gnocco.jpg', label: 'Gnocco fritto' },
+    { src: './img/gallery-sala.jpg', label: "L'ambiente" },
+    { src: './img/gallery-dolci.jpg', label: 'Dolci della casa' }
   ];
 
   return (
@@ -18,7 +18,7 @@ export default function ChiSiamo() {
       <section className="section about">
         <div className="container split">
           <div className="img-frame">
-            <img src="/img/gallery-sala.jpg" alt="Sala rustica" />
+            <img src="./img/gallery-sala.jpg" alt="Sala rustica" />
           </div>
           <div className="about-copy">
             <div className="eyebrow">Chi siamo</div>

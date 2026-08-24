@@ -10,7 +10,7 @@ export default function Home() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-bg">
-          <img src="/img/hero.jpg" alt="Sala interna della Trattoria Bar Cantone" />
+          <img src="./img/hero.jpg" alt="Sala interna della Trattoria Bar Cantone" />
         </div>
         <div className="container">
           <div className="hero-copy">

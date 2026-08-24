@@ -1,3 +1,4 @@
+
 // src/utils/localStore.js
 // Database locale nel browser – funziona senza internet o Firebase.
 // Quando vorrai passare online, si collega a Firebase automaticamente.
