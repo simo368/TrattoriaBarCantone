@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Public Pages
@@ -31,7 +31,7 @@ const PublicLayout = () => (
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Toaster position="top-center" />
       <Routes>
         <Route element={<PublicLayout />}>
@@ -49,7 +49,7 @@ function App() {
           <Route path="prenotazioni" element={<AdminBookings />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
