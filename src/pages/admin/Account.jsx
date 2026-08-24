@@ -2,7 +2,7 @@ import React from 'react';
 import PageHeader from '../../components/admin/ui/PageHeader';
 import EmptyState from '../../components/admin/ui/EmptyState';
 import { User } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import ActionButton from '../../components/admin/ui/ActionButton';
 
 export default function Account() {

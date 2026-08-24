@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../ui/Modal';
 import ActionButton from '../ui/ActionButton';
-import { generateSlots, getAvailableSlots } from '../../../utils/availability';
+import { generateSlots, getAvailableSlots, isOpen as isRestaurantOpen } from '../../../utils/availability';
 import { useSettings } from '../../../hooks/useSettings';
 import { parseISO } from 'date-fns';
 import { Loader2 } from 'lucide-react';
@@ -33,8 +33,7 @@ export default function BookingFormModal({ isOpen, onClose, onSave, initialData,
 
   const selectedDate = useMemo(() => formData.date ? parseISO(formData.date) : null, [formData.date]);
   
-  const { isOpen } = require('../../../utils/availability');
-  const isClosed = selectedDate ? !isOpen(selectedDate, settings) : false;
+  const isClosed = selectedDate ? !isRestaurantOpen(selectedDate, settings) : false;
 
   const allSlots = useMemo(
     () => (selectedDate && !isClosed) ? generateSlots(selectedDate, settings) : [],
