@@ -3,7 +3,7 @@ import { format, addDays, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useBookings } from '../hooks/useBookings';
 import { useSettings } from '../hooks/useSettings';
-import { generateSlots, getAvailableSlots } from '../utils/availability';
+import { generateSlots, getAvailableSlots, isOpen } from '../utils/availability';
 import { CheckCircle2, CalendarDays, Users, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

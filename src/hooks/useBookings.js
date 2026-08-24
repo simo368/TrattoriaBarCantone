@@ -6,7 +6,8 @@ import {
   runTransaction
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { sendConfirmationEmail, notifyRestaurant } from '../utils/emailService';
+import { requestBookingConfirmation, requestBookingCancellation } from '../services/notificationService';
+import { getSettingsOnce } from './useSettings';
 
 // ---------------------------------------------------------
 // CONSTANTS & UTILS
@@ -26,10 +27,9 @@ export const BOOKING_STATUS = {
 
 export async function cancelBooking(id) {
   const bookingRef = doc(db, 'bookings', id);
-  // Prima di cancellare, otteniamo i dati attuali (servono per la mail)
   let bookingData = null;
   try {
-    const snap = await import('firebase/firestore').then(({ getDoc }) => getDoc(bookingRef));
+    const snap = await getDoc(bookingRef);
     if (snap.exists()) bookingData = snap.data();
   } catch(e) {}
 
@@ -39,11 +39,8 @@ export async function cancelBooking(id) {
   });
 
   if (bookingData && bookingData.email) {
-    import('../services/notificationService').then(({ requestBookingCancellation }) => {
-      import('../hooks/useSettings').then(async ({ getSettingsOnce }) => {
-        const settings = await getSettingsOnce();
-        requestBookingCancellation(id, bookingData, settings);
-      }).catch(console.warn);
+    getSettingsOnce().then(settings => {
+      requestBookingCancellation(id, bookingData, settings);
     }).catch(console.warn);
   }
 }
@@ -111,13 +108,13 @@ export function useBookings(dateFilter = null) {
 
     const withId = { ...data, status: BOOKING_STATUS.CONFIRMED, createdAt: new Date().toISOString(), id: bookingRef.id };
     
-    // Innesco asincrono del sistema notifiche (non bloccante)
-    import('../services/notificationService').then(({ requestBookingConfirmation }) => {
-      import('../hooks/useSettings').then(async ({ getSettingsOnce }) => {
-        const settings = await getSettingsOnce();
-        requestBookingConfirmation(bookingRef.id, withId, settings);
-      }).catch(console.warn);
+    // Innesco asincrono del sistema notifiche
+    getSettingsOnce().then(settings => {
+      requestBookingConfirmation(bookingRef.id, withId, settings);
     }).catch(console.warn);
+
+    return bookingRef.id;
+  };
 
     return bookingRef.id;
   };

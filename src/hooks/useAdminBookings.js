@@ -5,6 +5,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { BOOKING_STATUS } from './useBookings';
+import { requestBookingConfirmation, requestBookingUpdate } from '../services/notificationService';
+import { getSettingsOnce } from './useSettings';
 
 /**
  * Carica le prenotazioni in un determinato intervallo di date.
@@ -77,11 +79,8 @@ export async function adminCreateBooking(data, maxCoversPerSlot = 40) {
   });
 
   const withId = { ...data, status: data.status || BOOKING_STATUS.CONFIRMED, id: bookingRef.id };
-  import('../services/notificationService').then(({ requestBookingConfirmation }) => {
-    import('../hooks/useSettings').then(async ({ getSettingsOnce }) => {
-      const settings = await getSettingsOnce();
-      requestBookingConfirmation(bookingRef.id, withId, settings);
-    }).catch(console.warn);
+  getSettingsOnce().then(settings => {
+    requestBookingConfirmation(bookingRef.id, withId, settings);
   }).catch(console.warn);
 
   return bookingRef.id;
@@ -105,10 +104,16 @@ export async function adminUpdateBooking(id, oldData, newData, maxCoversPerSlot 
       ...newData,
       updatedAt: serverTimestamp()
     };
-    // Non modifichiamo id, date, time, guests, o createdAt per sicurezza (già garantito da affectsAvailability = false)
     await runTransaction(db, async (tx) => {
         tx.update(bookingRef, updatePayload);
     });
+
+    if (newData.email) {
+      const withId = { ...newData, id: bookingRef.id };
+      getSettingsOnce().then(settings => {
+        requestBookingUpdate(bookingRef.id, withId, settings);
+      }).catch(console.warn);
+    }
     return;
   }
 
@@ -118,7 +123,6 @@ export async function adminUpdateBooking(id, oldData, newData, maxCoversPerSlot 
   const isSameSlot = oldOccupancyRef.id === newOccupancyRef.id;
 
   await runTransaction(db, async (tx) => {
-    // 1. Lettura
     const oldOccSnap = await tx.get(oldOccupancyRef);
     let oldOccCovers = oldOccSnap.exists() ? oldOccSnap.data().covers : 0;
 
@@ -127,15 +131,13 @@ export async function adminUpdateBooking(id, oldData, newData, maxCoversPerSlot 
       const newOccSnap = await tx.get(newOccupancyRef);
       newOccCovers = newOccSnap.exists() ? newOccSnap.data().covers : 0;
     } else {
-      newOccCovers = oldOccCovers; // Stesso slot
+      newOccCovers = oldOccCovers;
     }
 
-    // 2. Calcolo nuove disponibilità
     let finalOldCovers = oldOccCovers;
     let finalNewCovers = newOccCovers;
 
     if (isSameSlot) {
-      // Cambiano solo i coperti nello stesso slot
       const delta = Number(newData.guests) - Number(oldData.guests);
       finalNewCovers = oldOccCovers + delta;
       
@@ -143,7 +145,6 @@ export async function adminUpdateBooking(id, oldData, newData, maxCoversPerSlot 
         throw new Error('SLOT_FULL');
       }
     } else {
-      // Cambio di slot (data o ora diversi)
       finalOldCovers = Math.max(0, oldOccCovers - Number(oldData.guests));
       finalNewCovers = newOccCovers + Number(newData.guests);
 
@@ -152,7 +153,6 @@ export async function adminUpdateBooking(id, oldData, newData, maxCoversPerSlot 
       }
     }
 
-    // 3. Scrittura
     if (isSameSlot) {
       tx.set(oldOccupancyRef, { covers: finalNewCovers, date: oldData.date, time: oldData.time }, { merge: true });
     } else {
@@ -166,14 +166,10 @@ export async function adminUpdateBooking(id, oldData, newData, maxCoversPerSlot 
     });
   });
 
-  // Se l'aggiornamento ha avuto successo e il cliente ha l'email:
   if (newData.email) {
     const withId = { ...newData, id: bookingRef.id };
-    import('../services/notificationService').then(({ requestBookingUpdate }) => {
-      import('../hooks/useSettings').then(async ({ getSettingsOnce }) => {
-        const settings = await getSettingsOnce();
-        requestBookingUpdate(bookingRef.id, withId, settings);
-      }).catch(console.warn);
+    getSettingsOnce().then(settings => {
+      requestBookingUpdate(bookingRef.id, withId, settings);
     }).catch(console.warn);
   }
 }
