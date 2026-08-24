@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { bookingsStore } from '../../utils/localStore';
 import { format } from 'date-fns';
-import { Users, Phone, FileText, CheckCircle2, XCircle, Search, Trash2 } from 'lucide-react';
+import { Users, Phone, FileText, CheckCircle2, XCircle, Search, Trash2, CalendarDays } from 'lucide-react';
 
 export default function GestisciPrenotazioni() {
   const [bookings, setBookings] = useState([]);
