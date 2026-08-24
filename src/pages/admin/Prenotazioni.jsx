@@ -1,41 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { bookingsStore } from '../../utils/localStore';
+import { useBookings } from '../../hooks/useBookings';
 import { format } from 'date-fns';
 import { Users, Phone, FileText, CheckCircle2, XCircle, Search, Trash2, CalendarDays } from 'lucide-react';
 
 export default function GestisciPrenotazioni() {
-  const [bookings, setBookings] = useState([]);
   const [dateFilter, setDateFilter] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const { bookings, loading, cancelBooking, deleteBooking } = useBookings(dateFilter);
 
-  useEffect(() => {
-    refreshBookings();
-  }, [dateFilter]);
-
-  const refreshBookings = () => {
-    const all = bookingsStore.getAll();
-    setBookings(all.filter(b => b.date === dateFilter));
-  };
-
-  const handleCancel = (id) => {
+  const handleCancel = async (id) => {
     if (window.confirm('Vuoi annullare questa prenotazione?')) {
-      bookingsStore.cancel(id);
-      toast.success('Prenotazione annullata');
-      refreshBookings();
+      try {
+        await cancelBooking(id);
+        toast.success('Prenotazione annullata');
+      } catch (err) {
+        toast.error("Errore durante l'operazione");
+      }
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Eliminare definitivamente dal database?')) {
-      bookingsStore.delete(id);
-      toast.success('Prenotazione eliminata');
-      refreshBookings();
+      try {
+        await deleteBooking(id);
+        toast.success('Prenotazione eliminata');
+      } catch (err) {
+        toast.error("Errore durante l'eliminazione");
+      }
     }
   };
 
   return (
     <div>
-      <h1 className="page-title">Gestione Prenotazioni</h1>
+      <h1 className="page-title">Gestione Prenotazioni (Cloud)</h1>
       
       <div className="toolbar mb-4" style={{ background: '#fff', padding: '16px', borderRadius: 'var(--r)', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
@@ -65,17 +62,21 @@ export default function GestisciPrenotazioni() {
             </tr>
           </thead>
           <tbody>
-            {bookings.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="center text-muted py-4">Sincronizzazione prenotazioni...</td>
+              </tr>
+            ) : bookings.length === 0 ? (
               <tr>
                 <td colSpan="6" className="center text-muted py-4">
                   <div style={{ padding: '40px 0' }}>
                     <CalendarDays size={48} style={{ opacity: 0.2, margin: '0 auto 12px' }} />
-                    <p>Nessuna prenotazione per questa data</p>
+                    <p>Nessuna prenotazione trovata in Cloud per questa data</p>
                   </div>
                 </td>
               </tr>
             ) : (
-              bookings.sort((a,b) => a.time.localeCompare(b.time)).map(b => (
+              bookings.sort((a,b) => (a.time || '').localeCompare(b.time || '')).map(b => (
                 <tr key={b.id} style={{ opacity: b.status === 'cancelled' ? 0.6 : 1, transition: 'all 0.2s' }}>
                   <td>
                     {b.status === 'confirmed' ? (

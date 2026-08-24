@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { format, addDays } from 'date-fns';
 import toast from 'react-hot-toast';
-import { bookingsStore } from '../utils/localStore';
+import { useBookings } from '../hooks/useBookings';
 import { CheckCircle2, CalendarDays, Users, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Prenota() {
+  const { createBooking } = useBookings();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -17,6 +18,7 @@ export default function Prenota() {
     notes: ''
   });
   const [completed, setCompleted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const availableSlots = ['12:00', '12:30', '13:00', '13:30', '14:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30'];
 
@@ -26,11 +28,20 @@ export default function Prenota() {
     setStep(step + 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) return toast.error("Nome e telefono obbligatori");
-    bookingsStore.add(formData);
-    setCompleted(true);
+    
+    setSubmitting(true);
+    try {
+      await createBooking(formData);
+      setCompleted(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("Errore durante il salvataggio. Riprova.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (completed) {
@@ -45,7 +56,7 @@ export default function Prenota() {
               <h3>Prenotazione Confermata!</h3>
               <p>Ti aspettiamo il <strong>{format(new Date(formData.date), 'dd/MM/yyyy')}</strong> alle ore <strong>{formData.time}</strong> per <strong>{formData.guests} persone</strong>.</p>
               <br/>
-              <p className="text-muted">A breve riceverai un'email di riepilogo all'indirizzo {formData.email || 'fornito'}.</p>
+              <p className="text-muted">La tua prenotazione è stata inviata direttamente alla cucina in tempo reale.</p>
               <br/>
               <Link to="/" className="btn btn-primary">Torna alla Home</Link>
             </div>
@@ -69,15 +80,9 @@ export default function Prenota() {
           <div className="booking-card">
             
             <div className="booking-steps">
-              <div className={`booking-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`}>
-                 Orario
-              </div>
-              <div className={`booking-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`}>
-                 Coperti
-              </div>
-              <div className={`booking-step ${step === 3 ? 'active' : ''}`}>
-                 Dati
-              </div>
+              <div className={`booking-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`}>Orario</div>
+              <div className={`booking-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`}>Coperti</div>
+              <div className={`booking-step ${step === 3 ? 'active' : ''}`}>Dati</div>
             </div>
 
             {/* STEP 1: Date & Time */}
@@ -177,8 +182,8 @@ export default function Prenota() {
                   <button type="button" className="btn btn-outline" style={{flex: 1}} onClick={() => setStep(2)}>
                     <ArrowLeft size={18} /> Indietro
                   </button>
-                  <button type="submit" className="btn btn-primary" style={{flex: 2}}>
-                    Conferma Prenotazione
+                  <button type="submit" className="btn btn-primary" style={{flex: 2}} disabled={submitting}>
+                    {submitting ? "Invio in corso..." : "Conferma Prenotazione"}
                   </button>
                 </div>
               </form>

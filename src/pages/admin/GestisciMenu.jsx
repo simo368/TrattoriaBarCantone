@@ -1,21 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { menuStore } from '../../utils/localStore';
+import { useMenu } from '../../hooks/useMenu';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
-const CATEGORIES = ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
-
 export default function GestisciMenu() {
-  const [menu, setMenu] = useState([]);
+  const { menu, loading, addDish, updateDish, deleteDish, CATEGORIES } = useMenu();
   const [activeCat, setActiveCat] = useState('primi');
   const [isEditing, setIsEditing] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', desc: '', price: '', category: '' });
 
-  useEffect(() => {
-    setMenu(menuStore.getAll());
-  }, []);
+  const categories = CATEGORIES || ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
 
-  const refreshMenu = () => setMenu(menuStore.getAll());
+  const currentDishes = Array.isArray(menu) 
+    ? menu.filter(m => m.category === activeCat)
+    : (menu[activeCat] || []);
 
   const handleEdit = (dish) => {
     setIsEditing(dish.id);
@@ -27,31 +25,38 @@ export default function GestisciMenu() {
     setEditForm({ name: '', desc: '', price: '', category: activeCat });
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (isEditing === 'new') {
-      menuStore.add(editForm);
-      toast.success('Piatto aggiunto');
-    } else {
-      menuStore.update(isEditing, editForm);
-      toast.success('Piatto aggiornato');
+    try {
+      if (isEditing === 'new') {
+        await addDish(editForm.category, editForm);
+        toast.success('Piatto aggiunto a Firestore');
+      } else {
+        await updateDish(isEditing, editForm);
+        toast.success('Piatto aggiornato su Firestore');
+      }
+      setIsEditing(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Errore salvataggio menù");
     }
-    setIsEditing(null);
-    refreshMenu();
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Sicuro di voler eliminare questo piatto?')) {
-      menuStore.delete(id);
-      toast.success('Piatto eliminato');
-      refreshMenu();
+  const handleDelete = async (id) => {
+    if (window.confirm('Sicuro di voler eliminare questo piatto dal database Cloud?')) {
+      try {
+        await deleteDish(id);
+        toast.success('Piatto eliminato');
+      } catch (err) {
+        toast.error("Errore durante l'eliminazione");
+      }
     }
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="page-title" style={{margin: 0}}>Gestione Menù</h1>
+        <h1 className="page-title" style={{margin: 0}}>Gestione Menù (Cloud)</h1>
         <button className="btn btn-primary" onClick={handleNew}>
           <Plus size={18} /> Aggiungi Piatto
         </button>
@@ -59,7 +64,7 @@ export default function GestisciMenu() {
 
       <div className="toolbar" style={{ background: '#fff', padding: '12px 16px', borderRadius: 'var(--r)', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
         <span className="text-muted" style={{ fontWeight: 'bold', fontSize: '0.85rem', marginRight: '8px' }}>Categorie:</span>
-        {CATEGORIES.map(cat => (
+        {categories.map(cat => (
           <button 
             key={cat} 
             className={`filter-btn ${activeCat === cat ? 'active' : ''}`}
@@ -81,21 +86,31 @@ export default function GestisciMenu() {
             </tr>
           </thead>
           <tbody>
-            {menu.filter(m => m.category === activeCat).sort((a,b) => a.order - b.order).map(dish => (
-              <tr key={dish.id}>
-                <td><strong style={{ fontSize: '1.05rem' }}>{dish.name}</strong></td>
-                <td><div style={{ maxWidth: '400px', lineHeight: 1.5 }}>{dish.desc}</div></td>
-                <td><strong>{dish.price ? `${dish.price} €` : '-'}</strong></td>
-                <td style={{textAlign: 'right'}}>
-                  <button className="btn btn-outline btn-sm" style={{marginRight: 8}} onClick={() => handleEdit(dish)}>
-                    <Edit2 size={14} /> Modifica
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(dish.id)} title="Elimina piatto">
-                    <Trash2 size={14} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {loading ? (
+              <tr><td colSpan="4" className="center text-muted py-4">Caricamento piatti da Firestore...</td></tr>
+            ) : currentDishes.length === 0 ? (
+              <tr><td colSpan="4" className="center text-muted py-4">Nessun piatto presente in questa categoria.</td></tr>
+            ) : (
+              currentDishes.map((dish, i) => (
+                <tr key={dish.id || i}>
+                  <td><strong style={{ fontSize: '1.05rem' }}>{dish.name}</strong></td>
+                  <td><div style={{ maxWidth: '400px', lineHeight: 1.5 }}>{dish.desc}</div></td>
+                  <td><strong>{dish.price ? `${dish.price} €` : '-'}</strong></td>
+                  <td style={{textAlign: 'right'}}>
+                    {dish.id && (
+                      <>
+                        <button className="btn btn-outline btn-sm" style={{marginRight: 8}} onClick={() => handleEdit(dish)}>
+                          <Edit2 size={14} /> Modifica
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(dish.id)} title="Elimina piatto">
+                          <Trash2 size={14} />
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -112,7 +127,7 @@ export default function GestisciMenu() {
               <div className="form-group mb-4">
                 <label className="form-label">Categoria *</label>
                 <select className="form-select" value={editForm.category} onChange={e => setEditForm({...editForm, category: e.target.value})}>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="form-group mb-4">
@@ -125,7 +140,7 @@ export default function GestisciMenu() {
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setIsEditing(null)}>Annulla</button>
-                <button type="submit" className="btn btn-primary">Salva</button>
+                <button type="submit" className="btn btn-primary">Salva in Cloud</button>
               </div>
             </form>
           </div>

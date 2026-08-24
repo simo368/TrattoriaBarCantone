@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { menuStore } from '../utils/localStore';
+import { useMenu } from '../hooks/useMenu';
 
 export default function MenuPublic() {
-  const rawMenu = menuStore.getAll();
-  const [activeTab, setActiveTab] = useState('antipasti');
-  const categories = ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
+  const { menu, loading, CATEGORIES } = useMenu();
+  const [activeTab, setActiveTab] = useState('primi');
+
+  const categories = CATEGORIES || ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
+
+  // Flatten or use array for active category
+  const currentDishes = Array.isArray(menu) 
+    ? menu.filter(m => m.category === activeTab)
+    : (menu[activeTab] || []);
 
   return (
     <main className="booking-page" style={{ paddingTop: '60px' }}>
@@ -35,15 +41,19 @@ export default function MenuPublic() {
             ))}
           </div>
 
-          <div className="dishes-grid">
-            {rawMenu.filter(m => m.category === activeTab).sort((a,b) => a.order - b.order).map(dish => (
-              <article key={dish.id} className="dish-card">
-                <h3 className="dish-name">{dish.name}</h3>
-                <p className="dish-desc">{dish.desc}</p>
-                {dish.price && <div className="dish-price">{dish.price} €</div>}
-              </article>
-            ))}
-          </div>
+          {loading ? (
+            <div className="center py-4 text-muted">Caricamento menù dal server...</div>
+          ) : (
+            <div className="dishes-grid">
+              {currentDishes.map((dish, i) => (
+                <article key={dish.id || i} className="dish-card">
+                  <h3 className="dish-name">{dish.name}</h3>
+                  <p className="dish-desc">{dish.desc}</p>
+                  {dish.price && <div className="dish-price">{dish.price} €</div>}
+                </article>
+              ))}
+            </div>
+          )}
           
           <p className="menu-note">Il menù può variare in base alla disponibilità degli ingredienti stagionali.</p>
           <div className="center" style={{marginTop: 32}}>

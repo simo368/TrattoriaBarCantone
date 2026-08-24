@@ -1,20 +1,20 @@
-import { bookingsStore } from '../../utils/localStore';
+import { useAllBookings } from '../../hooks/useBookings';
 import { format } from 'date-fns';
 import { Users, CalendarDays, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
-  const allBookings = bookingsStore.getAll();
+  const { bookings: allBookings, loading } = useAllBookings();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   
   const todayBookings = allBookings.filter(b => b.date === todayStr && b.status !== 'cancelled');
   const upcomingBookings = allBookings.filter(b => b.date > todayStr && b.status !== 'cancelled');
   
-  const todayCovers = todayBookings.reduce((sum, b) => sum + (b.guests || 0), 0);
-  const upcomingCovers = upcomingBookings.reduce((sum, b) => sum + (b.guests || 0), 0);
+  const todayCovers = todayBookings.reduce((sum, b) => sum + (Number(b.guests) || 0), 0);
+  const upcomingCovers = upcomingBookings.reduce((sum, b) => sum + (Number(b.guests) || 0), 0);
 
   return (
     <div>
-      <h1 className="page-title">Panoramica</h1>
+      <h1 className="page-title">Panoramica (In Tempo Reale)</h1>
       
       <div className="stat-grid">
         <div className="stat-card">
@@ -22,7 +22,7 @@ export default function Dashboard() {
             <div className="stat-label" style={{ margin: 0 }}>Coperti oggi</div>
             <Users size={20} className="text-muted" />
           </div>
-          <div className="stat-value">{todayCovers}</div>
+          <div className="stat-value">{loading ? '...' : todayCovers}</div>
         </div>
         
         <div className="stat-card">
@@ -30,7 +30,7 @@ export default function Dashboard() {
             <div className="stat-label" style={{ margin: 0 }}>Prenotazioni oggi</div>
             <CalendarDays size={20} className="text-muted" />
           </div>
-          <div className="stat-value">{todayBookings.length}</div>
+          <div className="stat-value">{loading ? '...' : todayBookings.length}</div>
         </div>
         
         <div className="stat-card">
@@ -38,7 +38,7 @@ export default function Dashboard() {
             <div className="stat-label" style={{ margin: 0 }}>Coperti futuri</div>
             <TrendingUp size={20} className="text-muted" />
           </div>
-          <div className="stat-value" style={{color: 'var(--brick)'}}>{upcomingCovers}</div>
+          <div className="stat-value" style={{color: 'var(--brick)'}}>{loading ? '...' : upcomingCovers}</div>
         </div>
       </div>
 
@@ -57,10 +57,12 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {todayBookings.length === 0 ? (
+            {loading ? (
+              <tr><td colSpan="4" className="center text-muted py-4">Connessione a Firestore...</td></tr>
+            ) : todayBookings.length === 0 ? (
               <tr><td colSpan="4" className="center text-muted py-4">Nessuna prenotazione per oggi</td></tr>
             ) : (
-              todayBookings.sort((a,b) => a.time.localeCompare(b.time)).map(b => (
+              todayBookings.sort((a,b) => (a.time || '').localeCompare(b.time || '')).map(b => (
                 <tr key={b.id}>
                   <td><strong>{b.time}</strong></td>
                   <td>{b.name}</td>
