@@ -26,6 +26,12 @@ service cloud.firestore {
       return isSignedIn() && getUserRole() in ['OWNER', 'MANAGER', 'STAFF'];
     }
 
+    // Permette la lettura del PROPRIO documento utente SENZA richiedere isOwner()
+    // Necessario per far funzionare getUserRole() dentro le stesse regole (evita ciclo)
+    function isOwnUserDoc(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
     // -------------------------------------------------------------------------
     // VALIDAZIONI BASE
     // -------------------------------------------------------------------------
@@ -74,10 +80,14 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
 
     match /users/{userId} {
-      // Solo l'owner può leggere, creare, aggiornare, cancellare gli account
+      // Lettura proprio profilo (serve per getUserRole nelle regole)
+      allow read: if isOwnUserDoc(userId);
+      
+      // Permetti creazione del proprio documento al primo login (AuthContext lo crea come OWNER)
+      allow create: if isOwnUserDoc(userId) && !exists(/databases/$(database)/documents/users/$(userId));
+      
+      // Scrittura/lettura completa solo per OWNER
       allow read, write: if isOwner();
-      // Un utente può leggere il proprio profilo (serve per far funzionare getUserRole sul client)
-      allow read: if request.auth.uid == userId;
     }
 
     match /bookings/{bookingId} {

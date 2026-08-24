@@ -27,14 +27,16 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import MobileBar from './components/layout/MobileBar';
 import AdminLayout from './components/layout/AdminLayout';
+import SEO from './components/layout/SEO';
 
 const PublicLayout = () => (
-  <>
+  <div className="public-app">
+    <SEO />
     <Header />
     <Outlet />
     <Footer />
     <MobileBar />
-  </>
+  </div>
 );
 
 function App() {

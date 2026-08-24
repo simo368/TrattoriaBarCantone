@@ -21,28 +21,35 @@ export default function Header() {
     <>
       <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="container nav-inner">
-          <Link to="/" className="logo">
+          <Link to="/" className="logo" aria-label="Home Trattoria Bar Cantone">
             Trattoria <span>Bar Cantone</span><small>Tradizione emiliana</small>
           </Link>
-          <nav className="nav-links">
+          <nav className="nav-links" aria-label="Navigazione principale">
             <Link to="/chi-siamo">Chi siamo</Link>
             <Link to="/menu">Menù</Link>
             <Link to="/contatti">Dove siamo</Link>
+            <a href="tel:+39059000000" className="nav-phone"><Phone size={16} /> 059 000000</a>
           </nav>
           <Link to="/prenota" className="btn btn-primary nav-cta">
-            <Phone size={16} /> Prenota un tavolo
+            Prenota un tavolo
           </Link>
-          <button className="nav-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+          <button 
+            className="nav-toggle" 
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-expanded={menuOpen}
+            aria-label="Apri menu di navigazione"
+          >
             <MenuIcon size={26} />
           </button>
         </div>
       </header>
-      <div className={`nav-panel ${menuOpen ? 'open' : ''}`}>
+      <div className={`nav-panel ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         <Link to="/chi-siamo">Chi siamo</Link>
         <Link to="/menu">Menù</Link>
         <Link to="/contatti">Dove siamo</Link>
-        <Link to="/prenota" className="btn btn-primary">
-          <Phone size={16} /> Prenota
+        <a href="tel:+39059000000"><Phone size={16} style={{display:'inline', marginRight:'8px', verticalAlign:'-3px'}}/> Chiama ora</a>
+        <Link to="/prenota" className="btn btn-primary" style={{marginTop: '8px'}}>
+          Prenota un tavolo
         </Link>
       </div>
     </>
