@@ -1,6 +1,6 @@
 // src/hooks/useMenu.js
 import { useState, useEffect } from 'react';
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const CATEGORIES = ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
@@ -33,18 +33,6 @@ const DEFAULT_MENU = {
   ],
 };
 
-async function seedDefaultMenu() {
-  const items = [];
-  Object.entries(DEFAULT_MENU).forEach(([category, dishes]) => {
-    dishes.forEach((dish) => {
-      items.push({ ...dish, category, createdAt: serverTimestamp() });
-    });
-  });
-  for (const item of items) {
-    await addDoc(collection(db, 'menu'), item);
-  }
-}
-
 export function useMenu() {
   const [menu, setMenu] = useState(DEFAULT_MENU);
   const [loading, setLoading] = useState(true);
@@ -58,11 +46,7 @@ export function useMenu() {
         if (grouped[item.category]) grouped[item.category].push(item);
       });
 
-      if (snap.empty) {
-        seedDefaultMenu().catch(console.error);
-      }
-
-      setMenu(grouped);
+      setMenu(snap.empty ? DEFAULT_MENU : grouped);
       setLoading(false);
     }, () => setLoading(false));
     return unsub;
