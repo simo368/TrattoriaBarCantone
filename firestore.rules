@@ -44,8 +44,9 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       allow create: if isValidBookingCreate();
-      allow read, delete: if isSignedIn();
+      allow read: if isSignedIn() || resource.data.status != 'cancelled';
       allow update: if isSignedIn() || isPublicCancel();
+      allow delete: if isSignedIn();
     }
 
     match /menu/{itemId} {
