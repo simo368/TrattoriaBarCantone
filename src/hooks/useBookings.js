@@ -116,9 +116,6 @@ export function useBookings(dateFilter = null) {
     return bookingRef.id;
   };
 
-    return bookingRef.id;
-  };
-
   return { bookings, loading, createBooking, cancelBooking };
 }
 
