@@ -4,6 +4,9 @@ import { Toaster } from 'react-hot-toast';
 // Public Pages
 import Home from './pages/Home';
 import Prenota from './pages/Prenota';
+import MenuPublic from './pages/MenuPublic';
+import ChiSiamo from './pages/ChiSiamo';
+import Contatti from './pages/Contatti';
 
 // Admin Pages
 import AdminLogin from './pages/admin/Login';
@@ -33,6 +36,9 @@ function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/menu" element={<MenuPublic />} />
+          <Route path="/chi-siamo" element={<ChiSiamo />} />
+          <Route path="/contatti" element={<Contatti />} />
           <Route path="/prenota" element={<Prenota />} />
         </Route>
         

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { format, addDays } from 'date-fns';
 import toast from 'react-hot-toast';
 import { bookingsStore } from '../utils/localStore';
+import { CheckCircle2, CalendarDays, Users, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Prenota() {
   const [step, setStep] = useState(1);
@@ -16,7 +18,6 @@ export default function Prenota() {
   });
   const [completed, setCompleted] = useState(false);
 
-  // Generate basic slots (since this is local offline version)
   const availableSlots = ['12:00', '12:30', '13:00', '13:30', '14:00', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30'];
 
   const handleNext = () => {
@@ -28,8 +29,6 @@ export default function Prenota() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) return toast.error("Nome e telefono obbligatori");
-    
-    // Save to local DB
     bookingsStore.add(formData);
     setCompleted(true);
   };
@@ -40,13 +39,15 @@ export default function Prenota() {
         <div className="container">
           <div className="booking-card booking-wrapper" style={{ margin: '0 auto', textAlign: 'center' }}>
             <div className="booking-success">
-              <div className="success-icon">✅</div>
+              <div className="success-icon" style={{color: 'var(--green-ok)'}}>
+                <CheckCircle2 size={64} style={{ margin: '0 auto 16px' }} />
+              </div>
               <h3>Prenotazione Confermata!</h3>
               <p>Ti aspettiamo il <strong>{format(new Date(formData.date), 'dd/MM/yyyy')}</strong> alle ore <strong>{formData.time}</strong> per <strong>{formData.guests} persone</strong>.</p>
               <br/>
               <p className="text-muted">A breve riceverai un'email di riepilogo all'indirizzo {formData.email || 'fornito'}.</p>
               <br/>
-              <a href="/" className="btn btn-primary">Torna alla Home</a>
+              <Link to="/" className="btn btn-primary">Torna alla Home</Link>
             </div>
           </div>
         </div>
@@ -68,9 +69,15 @@ export default function Prenota() {
           <div className="booking-card">
             
             <div className="booking-steps">
-              <div className={`booking-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`}>1. Orario</div>
-              <div className={`booking-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`}>2. Coperti</div>
-              <div className={`booking-step ${step === 3 ? 'active' : ''}`}>3. Dati</div>
+              <div className={`booking-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`}>
+                 Orario
+              </div>
+              <div className={`booking-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`}>
+                 Coperti
+              </div>
+              <div className={`booking-step ${step === 3 ? 'active' : ''}`}>
+                 Dati
+              </div>
             </div>
 
             {/* STEP 1: Date & Time */}
@@ -78,12 +85,15 @@ export default function Prenota() {
               <div className="fade-in">
                 <div className="form-group mb-4">
                   <label className="form-label">Data</label>
-                  <input type="date" className="form-input" 
-                    min={format(new Date(), 'yyyy-MM-dd')} 
-                    max={format(addDays(new Date(), 60), 'yyyy-MM-dd')}
-                    value={formData.date} 
-                    onChange={e => setFormData({...formData, date: e.target.value, time: ''})} 
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <CalendarDays size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--muted)' }} />
+                    <input type="date" className="form-input" style={{ paddingLeft: '40px' }}
+                      min={format(new Date(), 'yyyy-MM-dd')} 
+                      max={format(addDays(new Date(), 60), 'yyyy-MM-dd')}
+                      value={formData.date} 
+                      onChange={e => setFormData({...formData, date: e.target.value, time: ''})} 
+                    />
+                  </div>
                 </div>
                 
                 <label className="form-label mb-2" style={{display:'block'}}>Orari disponibili</label>
@@ -97,7 +107,9 @@ export default function Prenota() {
                   ))}
                 </div>
 
-                <button className="btn btn-primary btn-full mt-4" onClick={handleNext}>Continua →</button>
+                <button className="btn btn-primary btn-full mt-4" onClick={handleNext}>
+                  Continua <ArrowRight size={18} />
+                </button>
               </div>
             )}
 
@@ -111,16 +123,23 @@ export default function Prenota() {
                 
                 <div className="form-group mb-4">
                   <label className="form-label">Numero di persone</label>
-                  <select className="form-select" value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
-                    {[...Array(20)].map((_, i) => (
-                      <option key={i+1} value={i+1}>{i+1} {i===0 ? 'persona' : 'persone'}</option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <Users size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--muted)' }} />
+                    <select className="form-select" style={{ paddingLeft: '40px' }} value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
+                      {[...Array(20)].map((_, i) => (
+                        <option key={i+1} value={i+1}>{i+1} {i===0 ? 'persona' : 'persone'}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 mt-4">
-                  <button className="btn btn-outline flex-1" style={{flex: 1}} onClick={() => setStep(1)}>Indietro</button>
-                  <button className="btn btn-primary flex-2" style={{flex: 2}} onClick={handleNext}>Continua →</button>
+                  <button className="btn btn-outline flex-1" style={{flex: 1}} onClick={() => setStep(1)}>
+                    <ArrowLeft size={18} /> Indietro
+                  </button>
+                  <button className="btn btn-primary flex-2" style={{flex: 2}} onClick={handleNext}>
+                    Continua <ArrowRight size={18} />
+                  </button>
                 </div>
               </div>
             )}
@@ -155,8 +174,12 @@ export default function Prenota() {
                 </div>
 
                 <div className="flex gap-3 mt-4">
-                  <button type="button" className="btn btn-outline" style={{flex: 1}} onClick={() => setStep(2)}>Indietro</button>
-                  <button type="submit" className="btn btn-primary" style={{flex: 2}}>Conferma Prenotazione</button>
+                  <button type="button" className="btn btn-outline" style={{flex: 1}} onClick={() => setStep(2)}>
+                    <ArrowLeft size={18} /> Indietro
+                  </button>
+                  <button type="submit" className="btn btn-primary" style={{flex: 2}}>
+                    Conferma Prenotazione
+                  </button>
                 </div>
               </form>
             )}

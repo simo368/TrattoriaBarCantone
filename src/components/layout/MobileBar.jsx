@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { settingsStore } from '../../utils/localStore';
+import { Phone, Utensils, MapPin } from 'lucide-react';
 
 export default function MobileBar() {
   const settings = settingsStore.get();
@@ -8,13 +9,16 @@ export default function MobileBar() {
     <nav className="mobile-bar">
       <div className="mobile-bar-inner">
         <a href={settings.phoneLink} className="mobile-bar-btn">
-          <span className="mobile-bar-icon">📞</span>Chiama
+          <Phone size={20} className="mobile-bar-icon" />
+          <span>Chiama</span>
         </a>
-        <a href="/#menu" className="mobile-bar-btn">
-          <span className="mobile-bar-icon">🍝</span>Menù
-        </a>
+        <Link to="/menu" className="mobile-bar-btn">
+          <Utensils size={20} className="mobile-bar-icon" />
+          <span>Menù</span>
+        </Link>
         <a href={settings.maps} target="_blank" rel="noreferrer" className="mobile-bar-btn">
-          <span className="mobile-bar-icon">🗺️</span>Indicazioni
+          <MapPin size={20} className="mobile-bar-icon" />
+          <span>Mappa</span>
         </a>
       </div>
     </nav>

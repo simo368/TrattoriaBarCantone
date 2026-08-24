@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { settingsStore } from '../../utils/localStore';
 
 export default function Footer() {
@@ -13,17 +14,16 @@ export default function Footer() {
             <div className="footer-address">
               {settings.address.street}<br/>
               {settings.address.zip} {settings.address.city} ({settings.address.province})<br/>
-              <a href={settings.phoneLink}>📞 {settings.phone}</a>
+              <a href={settings.phoneLink}>{settings.phone}</a>
             </div>
           </div>
           <div>
             <div className="footer-col-title">Esplora</div>
             <nav className="footer-links">
-              <a href="/#chi-siamo">Chi siamo</a>
-              <a href="/#menu">Menù</a>
-              <a href="/#galleria">Galleria</a>
-              <a href="/#recensioni">Recensioni</a>
-              <a href="/#contatti">Dove siamo</a>
+              <Link to="/chi-siamo">Chi siamo</Link>
+              <Link to="/menu">Menù</Link>
+              <Link to="/contatti">Dove siamo</Link>
+              <Link to="/prenota">Prenota un tavolo</Link>
             </nav>
           </div>
           <div>
@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
         <div className="footer-bottom">
           <span>&copy; {new Date().getFullYear()} Trattoria Bar Cantone · Tutti i diritti riservati</span>
-          <span><a href="/admin/login">Area Riservata</a></span>
+          <span><Link to="/admin/login">Area Riservata</Link></span>
         </div>
       </div>
     </footer>

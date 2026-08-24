@@ -1,5 +1,6 @@
 import { bookingsStore } from '../../utils/localStore';
 import { format } from 'date-fns';
+import { Users, CalendarDays, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
   const allBookings = bookingsStore.getAll();
@@ -17,21 +18,33 @@ export default function Dashboard() {
       
       <div className="stat-grid">
         <div className="stat-card">
+          <div className="flex justify-between items-center mb-2">
+            <div className="stat-label" style={{ margin: 0 }}>Coperti oggi</div>
+            <Users size={20} className="text-muted" />
+          </div>
           <div className="stat-value">{todayCovers}</div>
-          <div className="stat-label">Coperti oggi</div>
         </div>
+        
         <div className="stat-card">
+          <div className="flex justify-between items-center mb-2">
+            <div className="stat-label" style={{ margin: 0 }}>Prenotazioni oggi</div>
+            <CalendarDays size={20} className="text-muted" />
+          </div>
           <div className="stat-value">{todayBookings.length}</div>
-          <div className="stat-label">Prenotazioni oggi</div>
         </div>
+        
         <div className="stat-card">
+          <div className="flex justify-between items-center mb-2">
+            <div className="stat-label" style={{ margin: 0 }}>Coperti futuri</div>
+            <TrendingUp size={20} className="text-muted" />
+          </div>
           <div className="stat-value" style={{color: 'var(--brick)'}}>{upcomingCovers}</div>
-          <div className="stat-label">Coperti futuri</div>
         </div>
       </div>
 
       <div className="admin-table-wrap">
-        <div style={{padding: '16px 20px', borderBottom: '1px solid var(--line)', fontWeight: 'bold'}}>
+        <div style={{padding: '16px 20px', borderBottom: '1px solid var(--line)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <CalendarDays size={18} />
           Prenotazioni di Oggi ({format(new Date(), 'dd/MM/yyyy')})
         </div>
         <table className="admin-table">
@@ -51,7 +64,12 @@ export default function Dashboard() {
                 <tr key={b.id}>
                   <td><strong>{b.time}</strong></td>
                   <td>{b.name}</td>
-                  <td>{b.guests}</td>
+                  <td>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                      <Users size={14} className="text-muted" />
+                      {b.guests}
+                    </div>
+                  </td>
                   <td>{b.phone}</td>
                 </tr>
               ))

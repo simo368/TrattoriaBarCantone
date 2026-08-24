@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { authStore } from '../../utils/localStore';
+import { LayoutDashboard, CalendarDays, UtensilsCrossed, LogOut, ExternalLink, Menu as MenuIcon } from 'lucide-react';
 
 export default function AdminLayout() {
   const isLogged = authStore.isLogged();
@@ -31,20 +32,20 @@ export default function AdminLayout() {
         <nav className="admin-nav">
           <div className="admin-nav-section">Principale</div>
           <Link to="/admin" className={`admin-nav-item ${location.pathname === '/admin' ? 'active' : ''}`}>
-            <span className="admin-nav-icon">📊</span> Panoramica
+            <LayoutDashboard size={18} className="admin-nav-icon" /> Panoramica
           </Link>
           <Link to="/admin/prenotazioni" className={`admin-nav-item ${location.pathname.includes('/prenotazioni') ? 'active' : ''}`}>
-            <span className="admin-nav-icon">📅</span> Prenotazioni
+            <CalendarDays size={18} className="admin-nav-icon" /> Prenotazioni
           </Link>
           
           <div className="admin-nav-section">Contenuti</div>
           <Link to="/admin/menu" className={`admin-nav-item ${location.pathname.includes('/menu') ? 'active' : ''}`}>
-            <span className="admin-nav-icon">🍝</span> Menù
+            <UtensilsCrossed size={18} className="admin-nav-icon" /> Menù
           </Link>
           
           <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
             <button onClick={handleLogout} className="admin-nav-item" style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>
-              <span className="admin-nav-icon">🚪</span> Esci
+              <LogOut size={18} className="admin-nav-icon" /> Esci
             </button>
           </div>
         </nav>
@@ -53,14 +54,12 @@ export default function AdminLayout() {
       <main className="admin-content">
         <header className="admin-topbar">
           <button className="nav-toggle" style={{ display: 'block' }} onClick={() => setSidebarOpen(true)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <line x1="3" y1="12" x2="21" y2="12"/>
-              <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
+            <MenuIcon size={24} />
           </button>
           <div>
-            <Link to="/" target="_blank" className="btn btn-outline btn-sm">Vai al sito ↗</Link>
+            <Link to="/" target="_blank" className="btn btn-outline btn-sm">
+              Vai al sito <ExternalLink size={14} style={{marginLeft: 4}} />
+            </Link>
           </div>
         </header>
         <div className="admin-main">

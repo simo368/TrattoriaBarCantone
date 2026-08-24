@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { menuStore } from '../../utils/localStore';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 const CATEGORIES = ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
 
 export default function GestisciMenu() {
   const [menu, setMenu] = useState([]);
   const [activeCat, setActiveCat] = useState('primi');
-  const [isEditing, setIsEditing] = useState(null); // id of dish being edited or 'new'
+  const [isEditing, setIsEditing] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', desc: '', price: '', category: '' });
 
   useEffect(() => {
@@ -51,10 +52,13 @@ export default function GestisciMenu() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="page-title" style={{margin: 0}}>Gestione Menù</h1>
-        <button className="btn btn-primary" onClick={handleNew}>+ Aggiungi Piatto</button>
+        <button className="btn btn-primary" onClick={handleNew}>
+          <Plus size={18} /> Aggiungi Piatto
+        </button>
       </div>
 
-      <div className="toolbar">
+      <div className="toolbar" style={{ background: '#fff', padding: '12px 16px', borderRadius: 'var(--r)', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
+        <span className="text-muted" style={{ fontWeight: 'bold', fontSize: '0.85rem', marginRight: '8px' }}>Categorie:</span>
         {CATEGORIES.map(cat => (
           <button 
             key={cat} 
@@ -79,12 +83,16 @@ export default function GestisciMenu() {
           <tbody>
             {menu.filter(m => m.category === activeCat).sort((a,b) => a.order - b.order).map(dish => (
               <tr key={dish.id}>
-                <td><strong>{dish.name}</strong></td>
-                <td>{dish.desc}</td>
-                <td>{dish.price ? `${dish.price} €` : '-'}</td>
+                <td><strong style={{ fontSize: '1.05rem' }}>{dish.name}</strong></td>
+                <td><div style={{ maxWidth: '400px', lineHeight: 1.5 }}>{dish.desc}</div></td>
+                <td><strong>{dish.price ? `${dish.price} €` : '-'}</strong></td>
                 <td style={{textAlign: 'right'}}>
-                  <button className="btn btn-outline btn-sm" style={{marginRight: 8}} onClick={() => handleEdit(dish)}>Modifica</button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(dish.id)}>Elimina</button>
+                  <button className="btn btn-outline btn-sm" style={{marginRight: 8}} onClick={() => handleEdit(dish)}>
+                    <Edit2 size={14} /> Modifica
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(dish.id)} title="Elimina piatto">
+                    <Trash2 size={14} />
+                  </button>
                 </td>
               </tr>
             ))}
