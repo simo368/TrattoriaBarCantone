@@ -1,5 +1,4 @@
 import { useAdmin } from '../../contexts/AdminContext';
-import { useAllBookings } from '../../hooks/useBookings';
 import { format } from 'date-fns';
 import { Users, CalendarDays, TrendingUp } from 'lucide-react';
 
