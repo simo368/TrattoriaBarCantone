@@ -1,9 +1,10 @@
+import { useAdmin } from '../../contexts/AdminContext';
 import { useAllBookings } from '../../hooks/useBookings';
 import { format } from 'date-fns';
 import { Users, CalendarDays, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
-  const { bookings: allBookings, loading } = useAllBookings();
+  const { bookings: allBookings, loading } = useAdmin();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   
   const todayBookings = allBookings.filter(b => b.date === todayStr && b.status !== 'cancelled');

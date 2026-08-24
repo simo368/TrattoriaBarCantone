@@ -12,6 +12,10 @@ export async function cancelBooking(id) {
   await updateDoc(doc(db, 'bookings', id), { status: 'cancelled', updatedAt: serverTimestamp() });
 }
 
+export async function deleteBooking(id) {
+  await deleteDoc(doc(db, 'bookings', id));
+}
+
 export function useBookings(dateFilter = null) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading]   = useState(true);

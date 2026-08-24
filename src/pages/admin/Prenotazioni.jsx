@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useAllBookings, useBookings } from '../../hooks/useBookings';
+import { useAdmin } from '../../contexts/AdminContext';
+import { cancelBooking, deleteBooking } from '../../hooks/useBookings';
 import { format } from 'date-fns';
 import { Users, Phone, FileText, CheckCircle2, XCircle, Search, Trash2, CalendarDays } from 'lucide-react';
 
 export default function GestisciPrenotazioni() {
   const [dateFilter, setDateFilter] = useState(format(new Date(), 'yyyy-MM-dd'));
-  
-  // Fetch ALL bookings so changing the date filter is INSTANT (reattiva)
-  const { bookings: allBookings, loading } = useAllBookings();
-  const { cancelBooking, deleteBooking } = useBookings(); 
+  const { bookings: allBookings, loading } = useAdmin();
 
   // Filter bookings locally based on the selected date
   const filteredBookings = allBookings.filter(b => b.date === dateFilter);

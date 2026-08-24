@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { AdminProvider } from '../../contexts/AdminContext';
 import { LayoutDashboard, CalendarDays, UtensilsCrossed, LogOut, ExternalLink, Menu as MenuIcon } from 'lucide-react';
 
 export default function AdminLayout() {
@@ -61,7 +62,9 @@ export default function AdminLayout() {
           </div>
         </header>
         <div className="admin-main">
-          <Outlet />
+          <AdminProvider>
+            <Outlet />
+          </AdminProvider>
         </div>
       </main>
     </div>
