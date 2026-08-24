@@ -1,47 +1,66 @@
-// src/hooks/useGallery.js
 import { useState, useEffect } from 'react';
-import { collection, addDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../firebase';
 
 export function useGallery() {
-  const [photos, setPhotos]   = useState([]);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    const q = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'gallery'), orderBy('order', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      setPhotos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setImages(items);
       setLoading(false);
     }, () => setLoading(false));
     return unsub;
   }, []);
 
-  const uploadPhoto = async (file, label) => {
-    setUploading(true);
-    try {
-      const path = `gallery/${Date.now()}_${file.name}`;
-      const sRef = storageRef(storage, path);
-      await uploadBytes(sRef, file);
-      const url  = await getDownloadURL(sRef);
-      await addDoc(collection(db, 'gallery'), {
-        src: url, storagePath: path,
-        alt: label || file.name,
-        label: label || '',
-        createdAt: serverTimestamp(),
-      });
-    } finally {
-      setUploading(false);
+  const addImage = (data) => {
+    // data deve contenere url (downloadURL)
+    return addDoc(collection(db, 'gallery'), { 
+      ...data, 
+      active: true, 
+      createdAt: serverTimestamp(), 
+      order: Date.now() 
+    });
+  };
+
+  const updateImage = (id, data) => {
+    return updateDoc(doc(db, 'gallery', id), { ...data, updatedAt: serverTimestamp() });
+  };
+
+  const deleteImage = async (id, fileUrl) => {
+    // 1. Elimina da Firestore
+    await deleteDoc(doc(db, 'gallery', id));
+    
+    // 2. Elimina da Storage (se presente e se è un url storage.firebase)
+    if (fileUrl && fileUrl.includes('firebasestorage.googleapis.com')) {
+      try {
+        // Estraiamo il path del file dall'URL
+        const pathRegex = /o\/(.+?)\?alt=/;
+        const match = fileUrl.match(pathRegex);
+        if (match && match[1]) {
+          const filePath = decodeURIComponent(match[1]);
+          const fileRef = ref(storage, filePath);
+          await deleteObject(fileRef);
+        }
+      } catch (err) {
+        console.error("Errore eliminazione file dallo storage:", err);
+      }
     }
   };
 
-  const deletePhoto = async (photo) => {
-    await deleteDoc(doc(db, 'gallery', photo.id));
-    if (photo.storagePath) {
-      await deleteObject(storageRef(storage, photo.storagePath)).catch(() => {});
-    }
+  const reorderGallery = async (reorderedItems) => {
+    const { writeBatch } = await import('firebase/firestore');
+    const batch = writeBatch(db);
+    reorderedItems.forEach(item => {
+      const itemRef = doc(db, 'gallery', item.id);
+      batch.update(itemRef, { order: item.order });
+    });
+    return batch.commit();
   };
 
-  return { photos, loading, uploading, uploadPhoto, deletePhoto };
+  return { images, loading, addImage, updateImage, deleteImage, reorderGallery };
 }

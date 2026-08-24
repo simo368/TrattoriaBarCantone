@@ -40,5 +40,17 @@ export function useMenu() {
 
   const deleteDish = (id) => deleteDoc(doc(db, 'menu', id));
 
-  return { menu, loading, addDish, updateDish, deleteDish, CATEGORIES };
+  // Esegue un aggiornamento batch per salvare l'ordinamento di una categoria
+  const reorderMenu = async (reorderedItems) => {
+    // reorderedItems è un array di oggetti: { id, order }
+    const { writeBatch } = await import('firebase/firestore');
+    const batch = writeBatch(db);
+    reorderedItems.forEach(item => {
+      const itemRef = doc(db, 'menu', item.id);
+      batch.update(itemRef, { order: item.order });
+    });
+    return batch.commit();
+  };
+
+  return { menu, loading, addDish, updateDish, deleteDish, reorderMenu, CATEGORIES };
 }

@@ -2,14 +2,89 @@ import { useEffect, useState } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { AdminProvider } from '../../contexts/AdminContext';
-import { LayoutDashboard, CalendarDays, UtensilsCrossed, LogOut, ExternalLink, Menu as MenuIcon } from 'lucide-react';
+import Drawer from '../admin/ui/Drawer';
+import '../../styles/admin.css';
+
+import { 
+  LayoutDashboard, 
+  CalendarDays, 
+  Clock,
+  UtensilsCrossed, 
+  Image as ImageIcon,
+  BarChart3,
+  Settings,
+  User,
+  LogOut, 
+  ExternalLink, 
+  Menu as MenuIcon 
+} from 'lucide-react';
+
+function NavLinks({ location, onNavigate, role }) {
+  const isActive = (path) => location.pathname === path || (path !== '/admin' && location.pathname.startsWith(path));
+  const isManagerOrOwner = role === 'OWNER' || role === 'MANAGER';
+  const isOwner = role === 'OWNER';
+
+  return (
+    <nav className="admin-nav">
+      <div className="admin-nav-section-title">Principale</div>
+      <Link to="/admin" className={`admin-nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={onNavigate}>
+        <LayoutDashboard size={18} /> Panoramica
+      </Link>
+      <Link to="/admin/prenotazioni" className={`admin-nav-item ${isActive('/admin/prenotazioni') ? 'active' : ''}`} onClick={onNavigate}>
+        <CalendarDays size={18} /> Prenotazioni
+      </Link>
+      <Link to="/admin/calendario" className={`admin-nav-item ${isActive('/admin/calendario') ? 'active' : ''}`} onClick={onNavigate}>
+        <CalendarDays size={18} /> Calendario Mensile
+      </Link>
+      
+      {isManagerOrOwner && (
+        <Link to="/admin/disponibilita" className={`admin-nav-item ${isActive('/admin/disponibilita') ? 'active' : ''}`} onClick={onNavigate}>
+          <Clock size={18} /> Disponibilità
+        </Link>
+      )}
+      
+      {isManagerOrOwner && (
+        <>
+          <div className="admin-nav-section-title">Contenuti</div>
+          <Link to="/admin/menu" className={`admin-nav-item ${isActive('/admin/menu') ? 'active' : ''}`} onClick={onNavigate}>
+            <UtensilsCrossed size={18} /> Menù
+          </Link>
+          <Link to="/admin/gallery" className={`admin-nav-item ${isActive('/admin/gallery') ? 'active' : ''}`} onClick={onNavigate}>
+            <ImageIcon size={18} /> Galleria
+          </Link>
+        </>
+      )}
+      
+      {isManagerOrOwner && (
+        <>
+          <div className="admin-nav-section-title">Sistema</div>
+          <Link to="/admin/statistiche" className={`admin-nav-item ${isActive('/admin/statistiche') ? 'active' : ''}`} onClick={onNavigate}>
+            <BarChart3 size={18} /> Statistiche
+          </Link>
+          <Link to="/admin/impostazioni" className={`admin-nav-item ${isActive('/admin/impostazioni') ? 'active' : ''}`} onClick={onNavigate}>
+            <Settings size={18} /> Impostazioni
+          </Link>
+        </>
+      )}
+      
+      {isOwner && (
+        <>
+          <div className="admin-nav-section-title">Sicurezza</div>
+          <Link to="/admin/utenti" className={`admin-nav-item ${isActive('/admin/utenti') ? 'active' : ''}`} onClick={onNavigate}>
+            <User size={18} /> Gestione Utenti
+          </Link>
+        </>
+      )}
+    </nav>
+  );
+}
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user, role, logout } = useAuth();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => { setSidebarOpen(false); }, [location]);
+  useEffect(() => { setMobileOpen(false); }, [location]);
 
   if (!user) return <Navigate to="/admin/login" />;
 
@@ -18,55 +93,47 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="admin-layout">
-      {/* Mobile overlay */}
-      {sidebarOpen && <div className="modal-overlay" style={{ zIndex: 40 }} onClick={() => setSidebarOpen(false)} />}
-      
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="admin-sidebar-logo">
-          <div className="logo" style={{ color: '#fff' }}>Trattoria <span>Cantone</span></div>
-          <small>Pannello di Gestione</small>
+    <div className="admin-app">
+      {/* Sidebar Desktop */}
+      <aside className="admin-sidebar hidden lg:flex">
+        <div className="admin-logo-container">
+          Trattoria<span style={{ color: 'var(--admin-text-main)', marginLeft: '4px' }}>Cantone</span>
         </div>
-        
-        <nav className="admin-nav">
-          <div className="admin-nav-section">Principale</div>
-          <Link to="/admin" className={`admin-nav-item ${location.pathname === '/admin' ? 'active' : ''}`}>
-            <LayoutDashboard size={18} className="admin-nav-icon" /> Panoramica
-          </Link>
-          <Link to="/admin/prenotazioni" className={`admin-nav-item ${location.pathname.includes('/prenotazioni') ? 'active' : ''}`}>
-            <CalendarDays size={18} className="admin-nav-icon" /> Prenotazioni
-          </Link>
-          
-          <div className="admin-nav-section">Contenuti</div>
-          <Link to="/admin/menu" className={`admin-nav-item ${location.pathname.includes('/menu') ? 'active' : ''}`}>
-            <UtensilsCrossed size={18} className="admin-nav-icon" /> Menù
-          </Link>
-          
-          <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-            <button onClick={handleLogout} className="admin-nav-item" style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>
-              <LogOut size={18} className="admin-nav-icon" /> Esci
-            </button>
-          </div>
-        </nav>
+        <NavLinks location={location} role={role} onNavigate={() => {}} />
       </aside>
-      
-      <main className="admin-content">
+
+      {/* Drawer Mobile */}
+      <Drawer isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+        <div className="admin-logo-container">
+          Trattoria<span style={{ color: 'var(--admin-text-main)', marginLeft: '4px' }}>Cantone</span>
+        </div>
+        <NavLinks location={location} role={role} onNavigate={() => setMobileOpen(false)} />
+      </Drawer>
+
+      <div className="admin-main-wrapper">
         <header className="admin-topbar">
-          <button className="nav-toggle" style={{ display: 'block' }} onClick={() => setSidebarOpen(true)}>
+          <button className="admin-mobile-toggle" onClick={() => setMobileOpen(true)}>
             <MenuIcon size={24} />
           </button>
-          <div>
-            <Link to="/" target="_blank" className="btn btn-outline btn-sm">
-              Vai al sito <ExternalLink size={14} style={{marginLeft: 4}} />
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <Link to="/" target="_blank" className="admin-btn admin-btn-outline admin-btn-sm hidden sm:flex">
+              Vai al sito <ExternalLink size={14} />
             </Link>
+            <Link to="/admin/account" className="admin-btn admin-btn-icon" style={{ color: 'var(--admin-text-muted)' }} title="Account">
+              <User size={20} />
+            </Link>
+            <button onClick={handleLogout} className="admin-btn admin-btn-icon" style={{ color: 'var(--admin-text-muted)' }} title="Esci">
+              <LogOut size={20} />
+            </button>
           </div>
         </header>
-        <div className="admin-main">
+        
+        <main className="admin-content">
           <AdminProvider>
             <Outlet />
           </AdminProvider>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

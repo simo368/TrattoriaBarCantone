@@ -30,34 +30,47 @@ export default function Prenota() {
   }, []);
 
   const selectedDate = useMemo(() => parseISO(formData.date), [formData.date]);
-  const closedDays = settings.hours?.closedDays ?? [];
-  const isClosed = closedDays.includes(formData.date);
-
+  
+  // Usiamo direttamente le funzioni della nuova utils/availability
   const allSlots = useMemo(
-    () => isClosed ? [] : generateSlots(selectedDate, settings.hours?.schedule),
-    [selectedDate, settings.hours?.schedule, isClosed]
+    () => formData.date ? generateSlots(selectedDate, settings) : [],
+    [selectedDate, settings]
   );
 
+  // Limiti date per DatePicker nativo HTML5
+  const maxAdvanceDays = settings.bookingRules?.maxAdvanceDays || 60;
+  const maxPeople = settings.bookingRules?.maxPeoplePerBooking || 15;
   const todayStr = useMemo(() => format(now, 'yyyy-MM-dd'), [now]);
+  const maxDateStr = useMemo(() => format(addDays(now, maxAdvanceDays), 'yyyy-MM-dd'), [now, maxAdvanceDays]);
+  
   const isToday = formData.date === todayStr;
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   const availableSlots = useMemo(() => {
-    if (isClosed) return [];
-    const slots = getAvailableSlots(selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot);
+    if (!formData.date) return [];
+    const slots = getAvailableSlots(selectedDate, settings, bookings, formData.guests);
+    
+    // Filtro orari passati o non conformi al minAdvanceHours
+    const minAdvanceHours = settings.bookingRules?.minAdvanceHours || 0;
+    const minMinutes = (now.getHours() + minAdvanceHours) * 60 + now.getMinutes();
+
     if (!isToday) return slots;
     return slots.filter(slot => {
       const [h, m] = slot.split(':').map(Number);
-      return (h * 60 + m) > currentMinutes;
+      return (h * 60 + m) > minMinutes;
     });
-  }, [selectedDate, settings.hours?.schedule, bookings, settings.maxCoversPerSlot, isClosed, isToday, currentMinutes]);
+  }, [selectedDate, settings, bookings, formData.guests, isToday, now, formData.date]);
+
+  // Controlliamo se il ristorante è aperto per la data selezionata
+  const isClosed = formData.date ? !isOpen(selectedDate, settings) : false;
 
   const handleNext = () => {
     if (step === 1 && (!formData.date || !formData.time)) return toast.error("Seleziona data e orario");
     if (step === 1 && isClosed) return toast.error("Il locale è chiuso in questa data");
     if (step === 1 && isToday) {
+      const minAdvanceHours = settings.bookingRules?.minAdvanceHours || 0;
       const [h, m] = formData.time.split(':').map(Number);
-      if ((h * 60 + m) <= currentMinutes) return toast.error("Orario non più disponibile");
+      if ((h * 60 + m) <= (now.getHours() + minAdvanceHours) * 60 + now.getMinutes()) return toast.error("Orario non più disponibile");
     }
     if (step === 2 && !formData.guests) return toast.error("Seleziona il numero di persone");
     setStep(step + 1);
@@ -76,11 +89,14 @@ export default function Prenota() {
       await createBooking(formData, settings.maxCoversPerSlot);
       setCompleted(true);
     } catch (err) {
-      console.error(err);
-      if (err.message === 'SLOT_FULL') {
-        toast.error('Slot non più disponibile, riprova');
-      } else {
-        toast.error("Errore durante il salvataggio. Riprova.");
+      const { getUserFriendlyError } = await import('../utils/errorHandler');
+      const errorMsg = getUserFriendlyError(err, 'Prenotazione');
+      toast.error(errorMsg);
+      
+      // Se l'errore è dovuto ai posti esauriti (o negato da rules), costringiamo a riselezionare l'orario
+      if (err.code === 'permission-denied' || err.message === 'SLOT_FULL') {
+        setFormData(prev => ({ ...prev, time: '' }));
+        setStep(1); // Ritorna al primo step per visualizzare gli slot aggiornati
       }
     } finally {
       setSubmitting(false);
@@ -136,8 +152,8 @@ export default function Prenota() {
                   <div style={{ position: 'relative' }}>
                     <CalendarDays size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--muted)' }} />
                     <input type="date" className="form-input" style={{ paddingLeft: '40px' }}
-                      min={format(new Date(), 'yyyy-MM-dd')} 
-                      max={format(addDays(new Date(), 60), 'yyyy-MM-dd')}
+                      min={todayStr} 
+                      max={maxDateStr}
                       value={formData.date} 
                       onChange={e => setFormData({...formData, date: e.target.value, time: ''})} 
                     />
@@ -191,11 +207,16 @@ export default function Prenota() {
                   <label className="form-label">Numero di persone</label>
                   <div style={{ position: 'relative' }}>
                     <Users size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--muted)' }} />
-                    <select className="form-select" style={{ paddingLeft: '40px' }} value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
-                      {[...Array(20)].map((_, i) => (
-                        <option key={i+1} value={i+1}>{i+1} {i===0 ? 'persona' : 'persone'}</option>
-                      ))}
-                    </select>
+                    <div className="form-group">
+                      <select className="form-select" style={{ paddingLeft: '40px' }} value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
+                        {[...Array(maxPeople)].map((_, i) => (
+                          <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'Persona' : 'Persone'}</option>
+                        ))}
+                      </select>
+                      <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#64748b' }}>
+                        Oltre {maxPeople} persone contattateci telefonicamente.
+                      </div>
+                    </div>
                   </div>
                 </div>
 

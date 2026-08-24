@@ -1,21 +1,57 @@
 // src/hooks/useBookings.js
 import { useState, useEffect } from 'react';
 import {
-  collection, updateDoc, deleteDoc, doc,
+  collection, updateDoc, deleteDoc, doc, getDoc,
   query, where, orderBy, onSnapshot, serverTimestamp,
   runTransaction
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { sendConfirmationEmail, notifyRestaurant } from '../utils/emailService';
 
+// ---------------------------------------------------------
+// CONSTANTS & UTILS
+// ---------------------------------------------------------
+export const BOOKING_STATUS = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  ARRIVED: 'arrived',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  NO_SHOW: 'no_show',
+};
+
+// ---------------------------------------------------------
+// PUBLIC ACTIONS
+// ---------------------------------------------------------
+
 export async function cancelBooking(id) {
-  await updateDoc(doc(db, 'bookings', id), { status: 'cancelled', updatedAt: serverTimestamp() });
+  const bookingRef = doc(db, 'bookings', id);
+  // Prima di cancellare, otteniamo i dati attuali (servono per la mail)
+  let bookingData = null;
+  try {
+    const snap = await import('firebase/firestore').then(({ getDoc }) => getDoc(bookingRef));
+    if (snap.exists()) bookingData = snap.data();
+  } catch(e) {}
+
+  await updateDoc(bookingRef, { 
+    status: BOOKING_STATUS.CANCELLED, 
+    updatedAt: serverTimestamp() 
+  });
+
+  if (bookingData && bookingData.email) {
+    import('../services/notificationService').then(({ requestBookingCancellation }) => {
+      import('../hooks/useSettings').then(async ({ getSettingsOnce }) => {
+        const settings = await getSettingsOnce();
+        requestBookingCancellation(id, bookingData, settings);
+      }).catch(console.warn);
+    }).catch(console.warn);
+  }
 }
 
-export async function deleteBooking(id) {
-  await deleteDoc(doc(db, 'bookings', id));
-}
-
+// ---------------------------------------------------------
+// PUBLIC HOOK (Usato da Prenota.jsx)
+// ---------------------------------------------------------
+// Modificato per accettare dateFilter in modo reattivo
 export function useBookings(dateFilter = null) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -29,16 +65,25 @@ export function useBookings(dateFilter = null) {
         orderBy('time')
       );
     } else {
-      q = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
+      // Seleziona solo le prenotazioni da oggi in poi per alleggerire il carico pubblico
+      const today = new Date().toISOString().split('T')[0];
+      q = query(
+        collection(db, 'bookings'),
+        where('date', '>=', today),
+        orderBy('date', 'asc'),
+        orderBy('time', 'asc')
+      );
     }
     const unsub = onSnapshot(q, snap => {
       setBookings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
-    }, () => setLoading(false));
+    }, (err) => {
+      console.error(err);
+      setLoading(false);
+    });
     return unsub;
   }, [dateFilter]);
 
-  // Crea nuova prenotazione con transazione atomica per evitare race condition
   const createBooking = async (data, maxCoversPerSlot = 40) => {
     const { date, time, guests } = data;
     const occupancyRef = doc(db, 'slotOccupancy', `${date}_${time}`);
@@ -55,7 +100,8 @@ export function useBookings(dateFilter = null) {
 
       const booking = {
         ...data,
-        status:    'confirmed',
+        status: BOOKING_STATUS.CONFIRMED,
+        emailStatus: 'pending',
         createdAt: serverTimestamp(),
       };
 
@@ -63,40 +109,106 @@ export function useBookings(dateFilter = null) {
       tx.set(occupancyRef, { covers: newTotal, date, time }, { merge: true });
     });
 
-    const withId = { ...data, status: 'confirmed', createdAt: new Date().toISOString(), id: bookingRef.id };
-    sendConfirmationEmail(withId).catch(console.warn);
-    notifyRestaurant(withId).catch(console.warn);
+    const withId = { ...data, status: BOOKING_STATUS.CONFIRMED, createdAt: new Date().toISOString(), id: bookingRef.id };
+    
+    // Innesco asincrono del sistema notifiche (non bloccante)
+    import('../services/notificationService').then(({ requestBookingConfirmation }) => {
+      import('../hooks/useSettings').then(async ({ getSettingsOnce }) => {
+        const settings = await getSettingsOnce();
+        requestBookingConfirmation(bookingRef.id, withId, settings);
+      }).catch(console.warn);
+    }).catch(console.warn);
+
     return bookingRef.id;
   };
 
-  const updateBooking = async (id, data) =>
-    updateDoc(doc(db, 'bookings', id), { ...data, updatedAt: serverTimestamp() });
-
-  const deleteBooking = async (id) =>
-    deleteDoc(doc(db, 'bookings', id));
-
-  return { bookings, loading, createBooking, updateBooking, cancelBooking, deleteBooking };
+  return { bookings, loading, createBooking, cancelBooking };
 }
 
-// Hook per tutte le prenotazioni (uso admin)
-export function useAllBookings() {
+// ---------------------------------------------------------
+// ADMIN ACTIONS & HOOKS
+// ---------------------------------------------------------
+
+export async function deleteBooking(id) {
+  await deleteDoc(doc(db, 'bookings', id));
+}
+
+export async function updateBookingStatus(id, newStatus) {
+  await updateDoc(doc(db, 'bookings', id), {
+    status: newStatus,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function getBookingById(id) {
+  const snap = await getDoc(doc(db, 'bookings', id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() };
+}
+
+// Ottiene SOLO le prenotazioni per una data specifica (per la vista giornaliera/admin)
+export function useBookingsForDate(date) {
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const q = query(collection(db, 'bookings'));
+    if (!date) {
+      setBookings([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const q = query(
+      collection(db, 'bookings'),
+      where('date', '==', date),
+      orderBy('time', 'asc')
+    );
+    
     const unsub = onSnapshot(q, snap => {
       setBookings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
       setError(null);
     }, (err) => {
       console.error(err);
-      setError('Impossibile caricare le prenotazioni. Verifica le regole e gli indici Firestore.');
+      setError('Errore di caricamento prenotazioni odierne.');
       setLoading(false);
     });
+    
     return unsub;
-  }, []);
+  }, [date]);
+
+  return { bookings, loading, error };
+}
+
+// Ottiene le prenotazioni future (escluso annullate/no show) per metriche
+export function useUpcomingBookings(startDate) {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!startDate) return;
+    setLoading(true);
+    const q = query(
+      collection(db, 'bookings'),
+      where('date', '>', startDate),
+      orderBy('date', 'asc'),
+      orderBy('time', 'asc')
+    );
+    
+    const unsub = onSnapshot(q, snap => {
+      setBookings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+      setError(null);
+    }, (err) => {
+      console.error(err);
+      setError('Errore di caricamento prenotazioni future.');
+      setLoading(false);
+    });
+    
+    return unsub;
+  }, [startDate]);
 
   return { bookings, loading, error };
 }

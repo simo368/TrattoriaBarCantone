@@ -2,10 +2,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // -------------------------------------------------------------------------
+    // RUOLI E PERMESSI (RBAC)
+    // -------------------------------------------------------------------------
     function isSignedIn() {
       return request.auth != null;
     }
+    
+    function getUserRole() {
+      // Legge il documento dell'utente dalla collection users
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
 
+    function isOwner() {
+      return isSignedIn() && getUserRole() == 'OWNER';
+    }
+
+    function isManager() {
+      return isSignedIn() && getUserRole() in ['OWNER', 'MANAGER'];
+    }
+
+    function isStaff() {
+      return isSignedIn() && getUserRole() in ['OWNER', 'MANAGER', 'STAFF'];
+    }
+
+    // -------------------------------------------------------------------------
+    // VALIDAZIONI BASE
+    // -------------------------------------------------------------------------
     function isNonEmptyString(val) {
       return val is string && val.size() > 0 && val.size() <= 200;
     }
@@ -19,12 +42,15 @@ service cloud.firestore {
     }
 
     function isValidGuests(val) {
-      return val is int && val >= 1 && val <= 30;
+      return val is int && val >= 1 && val <= 30; // Massimo 30 persone a prenotazione per sicurezza
     }
 
+    // -------------------------------------------------------------------------
+    // VALIDAZIONI BOOKINGS
+    // -------------------------------------------------------------------------
     function isValidBookingCreate() {
       let d = request.resource.data;
-      return d.keys().hasAll(['name', 'phone', 'date', 'time', 'guests'])
+      return d.keys().hasAll(['name', 'phone', 'date', 'time', 'guests', 'status', 'createdAt'])
         && isNonEmptyString(d.name)
         && isNonEmptyString(d.phone)
         && isValidDate(d.date)
@@ -32,41 +58,77 @@ service cloud.firestore {
         && isValidGuests(d.guests)
         && (!('email' in d) || d.email is string)
         && (!('notes' in d) || d.notes is string)
-        && (!('status' in d) || d.status == 'confirmed');
+        && (d.status == 'confirmed' || d.status == 'pending'); // Sito pubblico crea come confirmed o pending
     }
 
-    // Cancellazione dal link email: solo status -> cancelled (+ updatedAt).
+    // Cancellazione pubblica: l'utente anonimo può solo impostare status a 'cancelled' e aggiornare 'updatedAt'
     function isPublicCancel() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['status', 'updatedAt'])
-        && request.resource.data.status == 'cancelled';
+      let diff = request.resource.data.diff(resource.data);
+      return diff.affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status == 'cancelled'
+        && (resource.data.status == 'confirmed' || resource.data.status == 'pending');
+    }
+
+    // -------------------------------------------------------------------------
+    // REGOLE COLLEZIONI
+    // -------------------------------------------------------------------------
+
+    match /users/{userId} {
+      // Solo l'owner può leggere, creare, aggiornare, cancellare gli account
+      allow read, write: if isOwner();
+      // Un utente può leggere il proprio profilo (serve per far funzionare getUserRole sul client)
+      allow read: if request.auth.uid == userId;
     }
 
     match /bookings/{bookingId} {
-      allow create: if isValidBookingCreate();
-      allow read: if isSignedIn() || resource.data.status != 'cancelled';
-      allow update: if isSignedIn() || isPublicCancel();
-      allow delete: if isSignedIn();
+      allow create: if isStaff() || isValidBookingCreate();
+      allow read: if isStaff() || resource.data.status != 'cancelled';
+      allow update: if isStaff() || isPublicCancel();
+      allow delete: if isStaff(); // Lo staff può cancellare
     }
 
     match /menu/{itemId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if isManager(); // Staff escluso
     }
 
     match /gallery/{photoId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if isManager(); // Staff escluso
     }
 
     match /settings/{docId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if isManager(); // Staff escluso
     }
 
+    // -------------------------------------------------------------------------
+    // SICUREZZA SLOT OCCUPANCY (MITIGAZIONE TEMPORANEA)
+    // -------------------------------------------------------------------------
     match /slotOccupancy/{slotId} {
       allow read: if true;
-      allow create, update: if request.auth != null || request.resource.data.covers is int && request.resource.data.covers >= 0;
+      
+      allow create: if isStaff() || (
+        request.resource.data.keys().hasAll(['covers', 'date', 'time']) &&
+        request.resource.data.keys().hasOnly(['covers', 'date', 'time']) &&
+        request.resource.data.covers is int && 
+        request.resource.data.covers >= 1 && 
+        request.resource.data.covers <= 30 &&
+        isValidDate(request.resource.data.date) &&
+        isValidTime(request.resource.data.time) &&
+        slotId == (request.resource.data.date + "_" + request.resource.data.time) &&
+        request.resource.data.covers <= get(/databases/$(database)/documents/settings/main).data.maxCoversPerSlot
+      );
+
+      allow update: if isStaff() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['covers']) &&
+        request.resource.data.covers is int &&
+        request.resource.data.covers > resource.data.covers && 
+        (request.resource.data.covers - resource.data.covers) <= 30 &&
+        request.resource.data.covers <= get(/databases/$(database)/documents/settings/main).data.maxCoversPerSlot
+      );
+      
+      allow delete: if isStaff();
     }
   }
 }

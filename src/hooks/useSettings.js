@@ -6,8 +6,10 @@ import { db } from '../firebase';
 
 const DEFAULT_SETTINGS = {
   businessName: 'Trattoria Bar Cantone',
+  description: 'Cucina tipica emiliana dal 1968. Pasta fresca tirata a mano e specialità del territorio.',
   phone: '059 664317',
   phoneLink: 'tel:+390596664317',
+  email: 'info@trattoriabarcantone.it',
   address: { street: 'Via Fornaci, 36', city: 'Carpi', province: 'MO', zip: '41012' },
   hours: {
     lastUpdated: new Date().toISOString().split('T')[0],
@@ -25,7 +27,13 @@ const DEFAULT_SETTINGS = {
     specialNote: null,
   },
   maxCoversPerSlot: 40,
+  bookingRules: {
+    minAdvanceHours: 2,
+    maxAdvanceDays: 60,
+    maxPeoplePerBooking: 15
+  },
   social: {
+    whatsapp: 'https://wa.me/390596664317',
     instagram: 'https://www.instagram.com/trattoriabarcantone/',
     facebook: 'https://www.facebook.com/trattoriacantone/',
     tripadvisor: 'https://www.tripadvisor.it/Restaurant_Review-g670816-d2664568-Reviews-Trattoria_Bar_Cantone-Carpi_Province_of_Modena_Emilia_Romagna.html',
@@ -35,6 +43,10 @@ const DEFAULT_SETTINGS = {
     google: { score: '4,3', count: '1.760+', stars: 4, platform: 'Google', lastUpdated: new Date().toISOString().split('T')[0], url: 'https://www.google.com/search?q=Trattoria+Bar+Cantone+Carpi+recensioni' },
     tripadvisor: { score: '4,0', count: '686', stars: 4, platform: 'Tripadvisor', lastUpdated: new Date().toISOString().split('T')[0], url: 'https://www.tripadvisor.it/Restaurant_Review-g670816-d2664568-Reviews-Trattoria_Bar_Cantone-Carpi_Province_of_Modena_Emilia_Romagna.html' },
   },
+  site: {
+    title: 'Trattoria Bar Cantone | Carpi',
+    metaDescription: 'La vera cucina emiliana a Carpi. Prenota online il tuo tavolo.',
+  }
 };
 
 export function useSettings() {
@@ -58,3 +70,17 @@ export function useSettings() {
 
   return { settings, loading, updateSettings };
 }
+
+import { getDoc } from 'firebase/firestore';
+
+export const getSettingsOnce = async () => {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'main'));
+    if (snap.exists()) {
+      return { ...DEFAULT_SETTINGS, ...snap.data() };
+    }
+  } catch (err) {
+    console.warn("Errore getSettingsOnce:", err);
+  }
+  return DEFAULT_SETTINGS;
+};

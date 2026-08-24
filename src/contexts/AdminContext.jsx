@@ -1,12 +1,12 @@
 import { createContext, useContext } from 'react';
-import { useAllBookings } from '../hooks/useBookings';
 
-const AdminContext = createContext(null);
+// Il context admin per ora è snellito, dato che le pagine faranno fetch mirati.
+// Verrà riempito in futuro con eventuali impostazioni utente/admin globali.
+const AdminContext = createContext({});
 
 export function AdminProvider({ children }) {
-  const { bookings, loading } = useAllBookings();
   return (
-    <AdminContext.Provider value={{ bookings, loading }}>
+    <AdminContext.Provider value={{}}>
       {children}
     </AdminContext.Provider>
   );
