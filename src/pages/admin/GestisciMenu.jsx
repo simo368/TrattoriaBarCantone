@@ -171,7 +171,16 @@ export default function GestisciMenu() {
   const toggleActive = async (dish) => {
     try {
       await updateDish(dish.id, { active: !dish.active });
-      toast.success(dish.active ? 'Piatto disattivato' : 'Piatto attivato');
+      toast.success(dish.active ? 'Piatto disattivato (nascosto)' : 'Piatto attivato (visibile)');
+    } catch {
+      toast.error("Errore");
+    }
+  };
+
+  const toggleSoldOut = async (dish) => {
+    try {
+      await updateDish(dish.id, { soldOut: !dish.soldOut });
+      toast.success(dish.soldOut ? 'Piatto di nuovo disponibile' : 'Piatto segnato come esaurito');
     } catch {
       toast.error("Errore");
     }
@@ -205,14 +214,6 @@ export default function GestisciMenu() {
       )
     },
     { 
-      header: 'Descrizione', 
-      cell: (row) => (
-        <div style={{ maxWidth: '300px', fontSize: '0.875rem', lineHeight: 1.4, opacity: row.active === false ? 0.6 : 1 }}>
-          {row.desc}
-        </div>
-      )
-    },
-    { 
       header: 'Prezzo', 
       cell: (row) => (
         <strong style={{ opacity: row.active === false ? 0.6 : 1 }}>
@@ -221,11 +222,28 @@ export default function GestisciMenu() {
       )
     },
     { 
-      header: 'Stato', 
+      header: 'Disponibilità (Visibile al Pubblico)', 
       cell: (row) => (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {row.active ? <StatusBadge status="success" label="Attivo" /> : <StatusBadge status="default" label="Nascosto" />}
-          {row.soldOut && <StatusBadge status="warning" label="Esaurito" />}
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: row.active ? 'var(--admin-success)' : 'var(--admin-text-muted)' }}>
+            <input 
+              type="checkbox" 
+              checked={row.active !== false} // default true if undefined
+              onChange={() => toggleActive(row)} 
+              style={{ width: '16px', height: '16px', accentColor: 'var(--admin-success)' }}
+            />
+            {row.active !== false ? 'Nel Menù' : 'Nascosto'}
+          </label>
+          
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: row.soldOut ? 'var(--admin-warning)' : 'var(--admin-text-muted)' }}>
+            <input 
+              type="checkbox" 
+              checked={!!row.soldOut} 
+              onChange={() => toggleSoldOut(row)} 
+              style={{ width: '16px', height: '16px', accentColor: 'var(--admin-warning)' }}
+            />
+            {row.soldOut ? 'Esaurito' : 'Disponibile'}
+          </label>
         </div>
       ) 
     },
@@ -234,9 +252,6 @@ export default function GestisciMenu() {
       style: { textAlign: 'right' },
       cell: (row) => row.id && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-          <ActionButton size="sm" variant="outline" onClick={() => toggleActive(row)} title={row.active ? 'Disattiva' : 'Attiva'}>
-            {row.active ? <EyeOff size={14} /> : <Eye size={14} />}
-          </ActionButton>
           <ActionButton size="sm" variant="outline" onClick={() => handleEdit(row)}>
             <Edit2 size={14} />
           </ActionButton>

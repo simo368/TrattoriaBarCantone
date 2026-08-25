@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminBookingsList } from '../../hooks/useAdminBookings';
+import { useAdminBookingsList, adminCreateBooking } from '../../hooks/useAdminBookings';
 import { useSettings } from '../../hooks/useSettings';
 import { updateBookingStatus, BOOKING_STATUS } from '../../hooks/useBookings';
 import { isOpen, getServicePeriods } from '../../utils/availability';
@@ -66,9 +66,7 @@ export default function Dashboard() {
     return {
       totalBookings: valid.length,
       covers,
-      capacityPercentage: Math.min(Math.round((covers / maxCovers) * 100), 100),
-      cancelledCount: cancelled.length,
-      noShowCount: noShows.length,
+      pendingCount: bookings.filter(b => b.status === BOOKING_STATUS.PENDING).length,
       nextBooking: upcoming.length > 0 ? upcoming[0] : null,
       currentService,
       isServiceActive
@@ -88,92 +86,144 @@ export default function Dashboard() {
     }
   };
 
+  const handleCreateBooking = async (formData) => {
+    try {
+      await adminCreateBooking(formData, settings.maxCoversPerSlot);
+      toast.success('Nuova prenotazione creata');
+    } catch (error) {
+      toast.error(error.message === 'SLOT_FULL' ? 'Capienza massima raggiunta per questo orario.' : 'Impossibile creare la prenotazione.');
+      throw error;
+    }
+  };
+
   if (settingsLoading || bookingsLoading) return <LoadingState />;
   if (error) return <div style={{ padding: '24px', color: 'red' }}>Errore caricamento dati: {error}</div>;
 
   return (
     <div>
-      <PageHeader 
-        title={`Dashboard - ${format(now, 'EEEE d MMMM', { locale: it })}`} 
-        subtitle="Panoramica operativa in tempo reale della giornata odierna."
-      >
-        <ActionButton icon={Plus} onClick={() => setIsNewBookingModalOpen(true)}>Nuova Prenotazione</ActionButton>
-      </PageHeader>
-
-      {/* AZIONI RAPIDE (Mobile-friendly grid) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-        <button className="admin-quick-action" onClick={() => navigate('/admin/prenotazioni')}>
-          <LayoutList size={20} />
-          <span>Tutte le Prenot.</span>
-        </button>
-        <button className="admin-quick-action" onClick={() => navigate('/admin/calendario')}>
-          <Calendar size={20} />
-          <span>Calendario</span>
-        </button>
-        <button className="admin-quick-action" onClick={() => navigate('/admin/disponibilita')}>
-          <Clock size={20} />
-          <span>Disponibilità</span>
-        </button>
-        <button className="admin-quick-action" onClick={() => navigate('/admin/menu')}>
-          <Utensils size={20} />
-          <span>Menù</span>
-        </button>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--admin-primary)', marginBottom: '4px' }}>OGGI</h1>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 500, color: 'var(--admin-text-main)' }}>{format(now, 'EEEE d MMMM yyyy', { locale: it }).toUpperCase()}</h2>
       </div>
 
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
           
-          {/* STATS PRINCIPALI */}
           <StatCard 
-            title="Coperti Odierni" 
-            value={`${stats.covers} pax`}
-            icon={Users} 
-            trend={stats.totalBookings > 0 ? `${stats.totalBookings} prenotazioni valide` : 'Nessuna prenotazione'} 
+            title="PRENOTAZIONI" 
+            value={stats.totalBookings}
+            icon={Calendar} 
+            trend="Di oggi" 
             trendUp={true}
           />
           
           <StatCard 
-            title="Servizio Attuale" 
-            value={stats.currentService}
-            icon={stats.currentService === 'Pranzo' ? Coffee : Utensils} 
-            trend={stats.isServiceActive ? 'In corso...' : 'In attesa'} 
-            trendUp={stats.isServiceActive}
+            title="COPERTI" 
+            value={stats.covers}
+            icon={Users} 
+            trend="Totali previsti" 
+            trendUp={true}
           />
 
           <StatCard 
-            title="Capacità Residua" 
-            value={`${100 - stats.capacityPercentage}%`}
-            icon={Clock} 
-            trend="Calcolata sul turno intero"
-            trendUp={stats.capacityPercentage < 90}
+            title="DA CONFERMARE" 
+            value={stats.pendingCount}
+            icon={AlertTriangle} 
+            trend={stats.pendingCount > 0 ? "Richiede attenzione" : "Tutto confermato"}
+            trendUp={stats.pendingCount === 0}
+            style={stats.pendingCount > 0 ? { borderLeft: '4px solid var(--admin-warning)' } : {}}
           />
           
-          {/* CANCELLAZIONI / CRITICITÀ */}
-          {(stats.cancelledCount > 0 || stats.noShowCount > 0) && (
-            <StatCard 
-              title="Criticità" 
-              value={`${stats.cancelledCount + stats.noShowCount}`}
-              icon={AlertTriangle} 
-              trend={`${stats.cancelledCount} Canc. / ${stats.noShowCount} No-show`} 
-              trendUp={false}
-            />
-          )}
+          <StatCard 
+            title="PROSSIMA PRENOT." 
+            value={stats.nextBooking ? stats.nextBooking.time : '--:--'}
+            icon={Clock} 
+            trend={stats.nextBooking ? `${stats.nextBooking.name} (${stats.nextBooking.guests} pax)` : "Nessun arrivo imminente"} 
+            trendUp={true}
+          />
         </div>
       )}
 
+      {/* AZIONI RAPIDE */}
+      <div style={{ marginBottom: '32px' }}>
+        <h3 style={{ fontSize: '1.1rem', color: 'var(--admin-text-muted)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AZIONI RAPIDE</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+          <button className="admin-quick-action" onClick={() => setIsNewBookingModalOpen(true)}>
+            <Plus size={20} />
+            <span>Nuova Prenotazione</span>
+          </button>
+          <button className="admin-quick-action" onClick={() => navigate('/admin/disponibilita')}>
+            <Clock size={20} />
+            <span>Gestisci Disponibilità</span>
+          </button>
+          <button className="admin-quick-action" onClick={() => navigate('/admin/menu')}>
+            <Utensils size={20} />
+            <span>Gestisci Menù</span>
+          </button>
+          <button className="admin-quick-action" onClick={() => navigate('/admin/calendario')}>
+            <Calendar size={20} />
+            <span>Visualizza Calendario</span>
+          </button>
+        </div>
+      </div>
+
       {/* TIMELINE PRENOTAZIONI DI OGGI */}
-      <div className="admin-stat-card" style={{ padding: '24px' }}>
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Clock size={20} color="var(--admin-primary)" /> Timeline Prenotazioni (Oggi)
-        </h3>
+      <div className="admin-stat-card" style={{ padding: '0' }}>
+        <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid var(--admin-border)' }}>
+          <h3 style={{ fontSize: '1.1rem', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--admin-text-main)' }}>
+            PRENOTAZIONI DI OGGI
+          </h3>
+        </div>
         
         {bookings.length === 0 ? (
-          <p style={{ color: 'var(--admin-text-muted)', textAlign: 'center', padding: '24px' }}>Non ci sono prenotazioni per la giornata odierna.</p>
+          <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>
+            <Calendar size={48} color="var(--admin-border)" style={{ margin: '0 auto 16px' }} />
+            <p style={{ margin: 0, fontSize: '1.1rem' }}>Nessuna prenotazione prevista per oggi.</p>
+          </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-            {/* Ordiniamo cronologicamente */}
-            {[...bookings].sort((a,b) => a.time.localeCompare(b.time)).map(booking => (
-              <BookingCard key={booking.id} booking={booking} onClick={setSelectedBooking} />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {[...bookings].sort((a,b) => a.time.localeCompare(b.time)).map((booking, idx) => (
+              <div 
+                key={booking.id} 
+                className="admin-booking-row"
+                onClick={() => setSelectedBooking(booking)}
+                style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '80px 1fr 100px 140px', 
+                  gap: '16px', 
+                  alignItems: 'center', 
+                  padding: '16px 24px', 
+                  borderBottom: idx < bookings.length - 1 ? '1px solid var(--admin-border)' : 'none',
+                  cursor: 'pointer',
+                  backgroundColor: 'var(--admin-surface)',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--admin-bg)'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--admin-surface)'}
+              >
+                <strong style={{ fontSize: '1.1rem', color: 'var(--admin-primary)' }}>{booking.time}</strong>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{booking.name}</div>
+                  {booking.phone && <div style={{ fontSize: '0.85rem', color: 'var(--admin-text-muted)' }}>{booking.phone}</div>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                  <Users size={16} color="var(--admin-text-muted)" /> {booking.guests} pax
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ 
+                    display: 'inline-block',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    backgroundColor: booking.status === BOOKING_STATUS.PENDING ? 'var(--admin-warning-light)' : (booking.status === BOOKING_STATUS.CONFIRMED ? 'var(--admin-success-light)' : 'var(--admin-bg)'),
+                    color: booking.status === BOOKING_STATUS.PENDING ? 'var(--admin-warning)' : (booking.status === BOOKING_STATUS.CONFIRMED ? 'var(--admin-success)' : 'var(--admin-text-muted)')
+                  }}>
+                    {booking.status === BOOKING_STATUS.PENDING ? 'Da confermare' : booking.status === BOOKING_STATUS.CONFIRMED ? 'Confermata' : booking.status}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -190,6 +240,8 @@ export default function Dashboard() {
         <BookingFormModal 
           isOpen={true} 
           onClose={() => setIsNewBookingModalOpen(false)} 
+          onSave={handleCreateBooking}
+          bookingsList={bookings}
         />
       )}
     </div>

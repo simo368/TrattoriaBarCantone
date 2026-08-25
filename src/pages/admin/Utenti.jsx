@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { collection, onSnapshot, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import PageHeader from '../../components/admin/ui/PageHeader';
@@ -9,11 +10,17 @@ import DataTable from '../../components/admin/ui/DataTable';
 import LoadingState from '../../components/admin/ui/LoadingState';
 import StatusBadge from '../../components/admin/ui/StatusBadge';
 import { UserCog } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import ActionButton from '../../components/admin/ui/ActionButton';
+import Modal from '../../components/admin/ui/Modal';
 
 export default function Utenti() {
   const { role } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newUser, setNewUser] = useState({ email: '', password: '', role: 'STAFF' });
 
   // Solo OWNER può accedere a questa pagina
   if (role !== 'OWNER') {
@@ -35,6 +42,21 @@ export default function Utenti() {
     } catch (err) {
       toast.error('Errore durante l\'aggiornamento del ruolo');
       console.error(err);
+    }
+  };
+
+  const handleCreateUser = async (event) => {
+    event.preventDefault();
+    setCreating(true);
+    try {
+      await httpsCallable(functions, 'createStaffUser')(newUser);
+      toast.success('Utente creato e abilitato al pannello.');
+      setNewUser({ email: '', password: '', role: 'STAFF' });
+      setIsCreating(false);
+    } catch (error) {
+      toast.error(error.message || 'Impossibile creare l’utente.');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -79,7 +101,9 @@ export default function Utenti() {
       <PageHeader 
         title="Gestione Sicurezza (RBAC)" 
         subtitle="Gestisci i ruoli e i permessi del tuo staff (Solo OWNER)."
-      />
+      >
+        <ActionButton icon={Plus} onClick={() => setIsCreating(true)}>Nuovo utente</ActionButton>
+      </PageHeader>
 
       <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid var(--admin-border)', marginBottom: '24px' }}>
         <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}><UserCog size={20} color="var(--admin-primary)"/> Livelli di Accesso</h4>
@@ -95,6 +119,37 @@ export default function Utenti() {
         data={users} 
         emptyTitle="Nessun utente trovato" 
       />
+
+      <Modal
+        isOpen={isCreating}
+        onClose={() => !creating && setIsCreating(false)}
+        title="Crea utente staff"
+        footer={
+          <>
+            <ActionButton variant="outline" onClick={() => setIsCreating(false)} disabled={creating}>Annulla</ActionButton>
+            <ActionButton form="create-staff-user" type="submit" loading={creating}>Crea utente</ActionButton>
+          </>
+        }
+      >
+        <form id="create-staff-user" onSubmit={handleCreateUser} className="admin-form-stack">
+          <div className="admin-form-field">
+            <label>Email di accesso</label>
+            <input className="admin-input" type="email" value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} required disabled={creating} />
+          </div>
+          <div className="admin-form-field">
+            <label>Password provvisoria (minimo 10 caratteri)</label>
+            <input className="admin-input" type="password" minLength="10" value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} required disabled={creating} />
+          </div>
+          <div className="admin-form-field">
+            <label>Ruolo</label>
+            <select className="admin-input" value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value })} disabled={creating}>
+              <option value="STAFF">Staff — solo prenotazioni</option>
+              <option value="MANAGER">Manager — contenuti e operatività</option>
+              <option value="OWNER">Owner — accesso completo</option>
+            </select>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

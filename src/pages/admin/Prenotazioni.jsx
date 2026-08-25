@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useAdminBookingsList, adminCreateBooking, adminUpdateBooking } from '../../hooks/useAdminBookings';
+import { useSettings } from '../../hooks/useSettings';
 import { updateBookingStatus, deleteBooking, BOOKING_STATUS } from '../../hooks/useBookings';
 import { format, addDays, subDays } from 'date-fns';
-import { Search, Plus, Filter, Mail, MailWarning, MailCheck } from 'lucide-react';
+import { Search, Plus, Mail, MailWarning, MailCheck } from 'lucide-react';
 
 import PageHeader from '../../components/admin/ui/PageHeader';
 import DataTable from '../../components/admin/ui/DataTable';
@@ -23,6 +24,7 @@ export default function GestisciPrenotazioni() {
   });
 
   const { bookings, loading, error } = useAdminBookingsList(dateRange.start, dateRange.end);
+  const { settings } = useSettings();
   
   // Client-side Filters
   const [search, setSearch] = useState('');
@@ -128,16 +130,15 @@ export default function GestisciPrenotazioni() {
   const handleSaveBooking = async (formData) => {
     try {
       if (formModal.data) {
-        await adminUpdateBooking(formModal.data.id, formModal.data, formData);
+        await adminUpdateBooking(formModal.data.id, formModal.data, formData, settings.maxCoversPerSlot);
         toast.success('Prenotazione aggiornata');
         if (selectedBooking?.id === formModal.data.id) {
           setSelectedBooking({ ...selectedBooking, ...formData });
         }
       } else {
-        await adminCreateBooking(formData);
+        await adminCreateBooking(formData, settings.maxCoversPerSlot);
         toast.success('Nuova prenotazione creata');
       }
-      // Il modale si chiuderà nel child component tramite onSuccess
     } catch (err) {
       if (err.message === 'SLOT_FULL') {
         toast.error('Capienza massima raggiunta per questo orario!');
@@ -228,16 +229,52 @@ export default function GestisciPrenotazioni() {
         </ActionButton>
       </PageHeader>
       
-      <FilterBar>
-        {/* Firestore Query Range */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderRight: '1px solid var(--admin-border)', paddingRight: '16px' }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--admin-text-muted)' }}>Dal:</label>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <button 
+          className={`admin-tab ${dateRange.start === format(new Date(), 'yyyy-MM-dd') && dateRange.end === format(new Date(), 'yyyy-MM-dd') ? 'active' : ''}`}
+          onClick={() => {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            setDateRange({ start: today, end: today });
+          }}
+        >
+          Oggi
+        </button>
+        <button 
+          className={`admin-tab ${dateRange.start === format(addDays(new Date(), 1), 'yyyy-MM-dd') && dateRange.end === format(addDays(new Date(), 1), 'yyyy-MM-dd') ? 'active' : ''}`}
+          onClick={() => {
+            const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
+            setDateRange({ start: tomorrow, end: tomorrow });
+          }}
+        >
+          Domani
+        </button>
+        <button 
+          className={`admin-tab ${dateRange.start === format(new Date(), 'yyyy-MM-dd') && dateRange.end === format(addDays(new Date(), 7), 'yyyy-MM-dd') ? 'active' : ''}`}
+          onClick={() => {
+            setDateRange({ start: format(new Date(), 'yyyy-MM-dd'), end: format(addDays(new Date(), 7), 'yyyy-MM-dd') });
+          }}
+        >
+          Questa Settimana
+        </button>
+        
+        <div style={{ flex: 1 }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label style={{ fontSize: '0.85rem', color: 'var(--admin-text-muted)' }}>Intervallo:</label>
           <input type="date" className="admin-input" style={{ width: '130px', padding: '6px 8px' }} value={dateRange.start} onChange={e => setDateRange({...dateRange, start: e.target.value})} />
-          <label style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--admin-text-muted)' }}>Al:</label>
+          <span>-</span>
           <input type="date" className="admin-input" style={{ width: '130px', padding: '6px 8px' }} value={dateRange.end} onChange={e => setDateRange({...dateRange, end: e.target.value})} />
         </div>
+      </div>
 
-        {/* Client Filters */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--admin-border)', flexWrap: 'wrap' }}>
+        <button className={`admin-tab ${statusFilter === '' ? 'active' : ''}`} onClick={() => setStatusFilter('')}>Tutte</button>
+        <button className={`admin-tab ${statusFilter === BOOKING_STATUS.PENDING ? 'active' : ''}`} onClick={() => setStatusFilter(BOOKING_STATUS.PENDING)}>Da Confermare</button>
+        <button className={`admin-tab ${statusFilter === BOOKING_STATUS.CONFIRMED ? 'active' : ''}`} onClick={() => setStatusFilter(BOOKING_STATUS.CONFIRMED)}>Confermate</button>
+        <button className={`admin-tab ${statusFilter === BOOKING_STATUS.CANCELLED ? 'active' : ''}`} onClick={() => setStatusFilter(BOOKING_STATUS.CANCELLED)}>Cancellate</button>
+        <button className={`admin-tab ${statusFilter === BOOKING_STATUS.COMPLETED ? 'active' : ''}`} onClick={() => setStatusFilter(BOOKING_STATUS.COMPLETED)}>Completate</button>
+      </div>
+      
+      <FilterBar>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '200px' }}>
           <Search size={16} className="text-muted" />
           <input 
@@ -249,23 +286,11 @@ export default function GestisciPrenotazioni() {
           />
         </div>
         
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <select className="admin-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: 'auto' }}>
-            <option value="">Tutti gli stati</option>
-            <option value={BOOKING_STATUS.PENDING}>In attesa</option>
-            <option value={BOOKING_STATUS.CONFIRMED}>Confermata</option>
-            <option value={BOOKING_STATUS.ARRIVED}>Arrivati</option>
-            <option value={BOOKING_STATUS.COMPLETED}>Completata</option>
-            <option value={BOOKING_STATUS.NO_SHOW}>No-Show</option>
-            <option value={BOOKING_STATUS.CANCELLED}>Annullata</option>
-          </select>
-
-          <select className="admin-input" value={timeFilter} onChange={e => setTimeFilter(e.target.value)} style={{ width: 'auto' }}>
-            <option value="">Tutti i turni</option>
-            <option value="lunch">Pranzo</option>
-            <option value="dinner">Cena</option>
-          </select>
-        </div>
+        <select className="admin-input" value={timeFilter} onChange={e => setTimeFilter(e.target.value)} style={{ width: 'auto' }}>
+          <option value="">Tutti i turni</option>
+          <option value="lunch">Solo Pranzo</option>
+          <option value="dinner">Solo Cena</option>
+        </select>
       </FilterBar>
 
       {error && (
@@ -319,18 +344,16 @@ export default function GestisciPrenotazioni() {
         onClose={() => setFormModal({ isOpen: false, data: null })} 
         initialData={formModal.data}
         onSave={handleSaveBooking}
-        bookingsList={bookings} // Passiamo la lista per il calcolo delle disponibilità
+        bookingsList={bookings}
       />
 
-      {/* Confirm Delete (Non usato direttamente nella UI principale, ma disponibile se serve in futuro o dal Drawer) */}
+      {/* Confirm Delete */}
       <ConfirmDialog 
         isOpen={deleteModal.isOpen} 
         onClose={() => setDeleteModal({ isOpen: false, id: null })} 
         onConfirm={handleDelete} 
-        title="Elimina Prenotazione" 
-        message="Sei sicuro di voler eliminare DEFINITIVAMENTE questa prenotazione? Questa azione non può essere annullata." 
-        confirmText="Elimina definitivamente" 
-        isDanger={true}
+        title="Elimina Prenotazione"
+        message="Sei sicuro di voler eliminare questa prenotazione? Questa azione non è reversibile."
       />
     </div>
   );

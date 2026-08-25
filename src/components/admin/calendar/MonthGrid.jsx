@@ -1,12 +1,12 @@
 import React from 'react';
 import { 
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
-  eachDayOfInterval, format, isSameMonth, isSameDay, isToday, parseISO
+  eachDayOfInterval, format, isSameMonth, isSameDay, isToday
 } from 'date-fns';
-import { it } from 'date-fns/locale';
 import { BOOKING_STATUS } from '../../../hooks/useBookings';
+import { isOpen } from '../../../utils/availability';
 
-export default function MonthGrid({ currentDate, selectedDate, onSelectDate, bookings, closedDays = [] }) {
+export default function MonthGrid({ currentDate, selectedDate, onSelectDate, bookings, settings }) {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -52,14 +52,17 @@ export default function MonthGrid({ currentDate, selectedDate, onSelectDate, boo
           const isSelected = isSameDay(day, selectedDate);
           const isCurrentMonth = isSameMonth(day, monthStart);
           const isDayToday = isToday(day);
-          const isClosed = closedDays.includes(dayStr);
+          const isClosed = !isOpen(day, settings);
           const stats = getDayStats(dayStr);
           
           // Layout del singolo giorno
           return (
-            <div 
+            <button
+              type="button"
+              className="admin-calendar-day"
               key={dayStr}
               onClick={() => onSelectDate(day)}
+              aria-label={`${format(day, 'd MMMM')}${stats ? `, ${stats.count} prenotazioni e ${stats.covers} coperti` : ''}${isClosed ? ', locale chiuso' : ''}`}
               style={{
                 minHeight: '100px',
                 padding: '8px',
@@ -99,7 +102,16 @@ export default function MonthGrid({ currentDate, selectedDate, onSelectDate, boo
               <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {stats && !isClosed && (
                   <>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text)', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '2px 4px', borderRadius: '4px', textAlign: 'center' }}>
+                    <div style={{ 
+                      fontSize: '0.75rem', 
+                      fontWeight: 600, 
+                      color: stats.covers >= (Number(settings.maxCoversPerSlot || 40) * 1.8) ? 'var(--admin-danger)' : 'var(--admin-text)', 
+                      backgroundColor: stats.covers >= (Number(settings.maxCoversPerSlot || 40) * 1.8) ? 'var(--admin-danger-light)' : '#f0fdf4', 
+                      border: stats.covers >= (Number(settings.maxCoversPerSlot || 40) * 1.8) ? '1px solid var(--admin-danger)' : '1px solid #bbf7d0', 
+                      padding: '2px 4px', 
+                      borderRadius: '4px', 
+                      textAlign: 'center' 
+                    }}>
                       {stats.count} Pren.
                     </div>
                     <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-muted)', backgroundColor: '#f1f5f9', padding: '2px 4px', borderRadius: '4px', textAlign: 'center' }}>
@@ -108,7 +120,7 @@ export default function MonthGrid({ currentDate, selectedDate, onSelectDate, boo
                   </>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

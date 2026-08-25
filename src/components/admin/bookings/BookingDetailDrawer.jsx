@@ -59,7 +59,7 @@ export default function BookingDetailDrawer({ isOpen, onClose, booking, onStatus
             <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Dettagli Prenotazione</h2>
             {getStatusLabel(booking.status)}
           </div>
-          <ActionButton variant="outline" icon={Edit2} onClick={() => onEdit(booking)}>Modifica</ActionButton>
+          {onEdit && <ActionButton variant="outline" icon={Edit2} onClick={() => onEdit(booking)}>Modifica</ActionButton>}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, overflowY: 'auto' }}>

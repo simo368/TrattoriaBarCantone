@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useMenu } from '../hooks/useMenu';
+import { useSettings } from '../hooks/useSettings';
 
 export default function MenuPublic() {
   const { menu, loading, CATEGORIES } = useMenu();
+  const { settings } = useSettings();
   const [activeCategory, setActiveCategory] = useState('');
   
   const categories = CATEGORIES || ['antipasti', 'primi', 'secondi', 'contorni', 'dolci', 'vini'];
+  
+  const prezzoMenu = settings?.prices?.menuFisso || 15;
+  const prezzoCoperto = settings?.prices?.coperto || 2;
   
   const categoryRefs = useRef({});
 
@@ -73,134 +78,65 @@ export default function MenuPublic() {
   }
 
   return (
-    <main className="menu-page" style={{ backgroundColor: 'var(--c-crema)', minHeight: '100vh', paddingBottom: '100px' }}>
+    <main className="menu-page bg-crema min-h-screen pb-100">
       
       {/* Intestazione Semplificata */}
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '100px 20px 30px',
-        backgroundColor: 'var(--c-crema-dark)'
-      }}>
-        <h1 style={{ 
-          fontFamily: 'var(--font-serif)', 
-          fontSize: 'clamp(2.5rem, 5vw, 4rem)', 
-          color: 'var(--c-forest)', 
-          margin: 0
-        }}>
+      <div className="menu-header bg-crema-dark center px-3">
+        <h1 className="title-xxl text-forest m-0">
           Il Menù
         </h1>
       </div>
 
       {/* Sticky Navigation */}
-      <div style={{
-        position: 'sticky',
-        top: '60px', // Header di base circa 60-70px
-        zIndex: 100,
-        backgroundColor: 'rgba(244, 241, 236, 0.95)', // var(--c-crema) con trasparenza
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        padding: '16px 20px',
-        borderBottom: '1px solid rgba(26,36,33,0.08)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
-      }}>
-        <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ 
-            display: 'flex', 
-            gap: '24px', 
-            overflowX: 'auto', 
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none'
-          }}>
-            <style>{`
-              div::-webkit-scrollbar { display: none; }
-            `}</style>
+      <div className="sticky-nav">
+        <div className="container max-w-md mx-auto">
+          <div className="category-scroll-container">
             {categories.map((cat) => (
               <button 
                 key={cat} 
                 onClick={() => scrollToCategory(cat)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '1.1rem',
-                  fontWeight: activeCategory === cat ? 600 : 400,
-                  color: activeCategory === cat ? 'var(--c-forest)' : 'var(--c-forest-light)',
-                  textTransform: 'capitalize',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  padding: '4px 0',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.3s ease'
-                }}
+                className={`category-btn ${activeCategory === cat ? 'active' : ''}`}
               >
                 {cat}
-                {activeCategory === cat && (
-                  <span style={{ 
-                    position: 'absolute', 
-                    bottom: '-8px', 
-                    left: '50%', 
-                    transform: 'translateX(-50%)',
-                    width: '6px', 
-                    height: '6px', 
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--c-terra)' 
-                  }} />
-                )}
+                {activeCategory === cat && <span className="category-btn-indicator" />}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="container" style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
+      <div className="container max-w-md mx-auto py-10 px-3">
         
         {/* Menù Fisso */}
-        <div style={{ 
-          backgroundColor: 'var(--c-crema-dark)', 
-          padding: '32px', 
-          borderRadius: '8px',
-          marginBottom: '60px',
-          borderLeft: '4px solid var(--c-terra)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
-            <h3 style={{ 
-              fontFamily: 'var(--font-serif)', 
-              fontSize: '1.8rem', 
-              color: 'var(--c-forest)', 
-              margin: 0 
-            }}>
+        <div className="menu-fisso-card bg-crema-dark mb-xl">
+          <div className="flex-between items-baseline mb-3">
+            <h3 className="title-md text-forest m-0">
               Menù Fisso Feriale
             </h3>
-            <span style={{ 
-              fontFamily: 'var(--font-sans)', 
-              fontSize: '1.4rem', 
-              color: 'var(--c-terra)', 
-              fontWeight: 600 
-            }}>
-              €15.00
+            <span className="price-badge-lg text-terra fw-600">
+              €{Number(prezzoMenu).toFixed(2)}
             </span>
           </div>
-          <p style={{ 
-            fontFamily: 'var(--font-sans)', 
-            fontSize: '1rem', 
-            color: 'var(--c-text-muted)', 
-            margin: 0,
-            lineHeight: 1.5
-          }}>
+          <p className="text-muted m-0 lh-base font-sans">
             Disponibile a pranzo dal lunedì al venerdì. Include primo, secondo con contorno, acqua, quarto di vino e caffè.
           </p>
         </div>
 
         {/* Categories and Dishes */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '1.2rem', color: 'var(--c-forest-light)' }}>
+          <div className="center p-10">
+            <span className="text-lg text-forest-light font-sans">
               Caricamento del menù...
             </span>
           </div>
+        ) : !categories.some(cat => (groupedMenu[cat] || []).length > 0) ? (
+          <div className="center p-10 bg-crema-dark" style={{ borderRadius: '16px' }}>
+            <span className="text-lg text-forest font-sans">
+              Il menù è in fase di aggiornamento. Torna a trovarci presto!
+            </span>
+          </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '60px' }}>
+          <div className="flex-col gap-xl">
             {categories.map((cat) => {
               const dishes = groupedMenu[cat] || [];
               
@@ -212,115 +148,42 @@ export default function MenuPublic() {
                   key={cat} 
                   ref={el => categoryRefs.current[cat] = el}
                   data-category={cat}
-                  style={{ scrollMarginTop: '150px' }} // Fallback per lo scroll nativo se si usa #hash
+                  className="menu-category-section"
                 >
-                  <h2 style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: '2.5rem',
-                    color: 'var(--c-forest)',
-                    textTransform: 'capitalize',
-                    borderBottom: '2px solid var(--c-crema-dark)',
-                    paddingBottom: '16px',
-                    marginBottom: '32px',
-                    marginTop: 0
-                  }}>
+                  <h2 className="category-title">
                     {cat}
                   </h2>
                   
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-                    gap: '24px' 
-                  }}>
+                  <div className="dish-grid">
                     {dishes.map((dish, i) => (
                       <div 
                         key={dish.id || i} 
-                        className="dish-card" // Added a class just in case we want to target it with CSS later
-                        style={{ 
-                          opacity: dish.soldOut ? 0.7 : 1,
-                          backgroundColor: '#ffffff',
-                          borderRadius: '16px',
-                          padding: '28px',
-                          boxShadow: '0 8px 30px rgba(26,36,33,0.06)',
-                          border: '1px solid rgba(26,36,33,0.04)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}
+                        className={`dish-card-styled ${dish.soldOut ? 'sold-out' : ''}`}
                       >
                         {/* A subtle colored line on top for extra beauty */}
-                        <div style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: '4px',
-                          backgroundColor: 'var(--c-terra)',
-                          opacity: 0.8
-                        }} />
+                        <div className="dish-card-accent" />
 
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'flex-start',
-                          gap: '16px',
-                          marginBottom: '16px'
-                        }}>
-                          <h4 style={{ 
-                            fontFamily: 'var(--font-serif)', 
-                            fontSize: '1.4rem', 
-                            fontWeight: 600,
-                            color: 'var(--c-forest)', 
-                            margin: 0,
-                            lineHeight: 1.2
-                          }}>
+                        <div className="dish-card-header">
+                          <h4 className="dish-title">
                             {dish.name}
                           </h4>
                           
                           {dish.price && (
-                            <span style={{ 
-                              fontFamily: 'var(--font-sans)', 
-                              fontSize: '1.25rem', 
-                              color: 'var(--c-terra)', 
-                              fontWeight: 700,
-                              whiteSpace: 'nowrap',
-                              backgroundColor: 'var(--c-crema)',
-                              padding: '6px 14px',
-                              borderRadius: '24px',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                            }}>
+                            <span className="dish-price-badge">
                               € {Number(dish.price).toFixed(2)}
                             </span>
                           )}
                         </div>
                         
                         {(dish.desc || dish.description) && (
-                          <p style={{ 
-                            fontFamily: 'var(--font-sans)',
-                            fontSize: '1rem', 
-                            color: 'var(--c-text-muted)', 
-                            margin: 0, 
-                            lineHeight: '1.6',
-                            flexGrow: 1
-                          }}>
+                          <p className="dish-desc font-sans m-0 lh-base flex-grow">
                             {dish.desc || dish.description}
                           </p>
                         )}
 
                         {dish.soldOut && (
-                          <div style={{ marginTop: '20px' }}>
-                            <span style={{ 
-                              fontSize: '0.75rem', 
-                              fontWeight: 700, 
-                              textTransform: 'uppercase', 
-                              letterSpacing: '0.1em', 
-                              color: 'var(--c-terra)', 
-                              backgroundColor: 'rgba(217, 72, 15, 0.1)',
-                              padding: '6px 12px', 
-                              borderRadius: '4px',
-                              display: 'inline-block'
-                            }}>
+                          <div className="mt-4">
+                            <span className="sold-out-badge">
                               Esaurito
                             </span>
                           </div>
@@ -334,25 +197,14 @@ export default function MenuPublic() {
           </div>
         )}
         
-        <div style={{ marginTop: '80px', paddingTop: '40px', borderTop: '1px solid rgba(26,36,33,0.1)', textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.95rem', color: 'var(--c-text-muted)', fontStyle: 'italic', marginBottom: '32px' }}>
-            Coperto e pane €2.00.<br/>
+        <div className="menu-footer text-center">
+          <p className="text-muted font-sans text-sm italic mb-4">
+            Coperto e pane €{Number(prezzoCoperto).toFixed(2)}.<br/>
             In caso di allergie o intolleranze alimentari, vi invitiamo a informare il nostro personale.
           </p>
           
           {/* CTA Prenota posizionata in fondo per invogliare dopo la lettura */}
-          <Link to="/prenota" className="btn" style={{ 
-            display: 'inline-block',
-            backgroundColor: 'var(--c-terra)',
-            color: '#fff',
-            textDecoration: 'none',
-            fontFamily: 'var(--font-sans)',
-            fontSize: '1.1rem',
-            fontWeight: 500,
-            padding: '16px 40px',
-            borderRadius: '4px',
-            transition: 'opacity 0.3s ease'
-          }}>
+          <Link to="/prenota" className="btn btn-primary btn-lg">
             Prenota un tavolo
           </Link>
         </div>

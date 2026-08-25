@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu as MenuIcon, Phone } from 'lucide-react';
+import { useSettings } from '../../hooks/useSettings';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const { settings } = useSettings();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -28,7 +30,11 @@ export default function Header() {
             <Link to="/chi-siamo">Chi siamo</Link>
             <Link to="/menu">Menù</Link>
             <Link to="/contatti">Dove siamo</Link>
-            <a href="tel:+39059000000" className="nav-phone"><Phone size={16} /> 059 000000</a>
+            {settings.phone && (
+              <a href={settings.phoneLink || `tel:${settings.phone}`} className="nav-phone">
+                <Phone size={16} /> {settings.phone}
+              </a>
+            )}
           </nav>
           <Link to="/prenota" className="btn btn-primary nav-cta">
             Prenota un tavolo
@@ -47,7 +53,11 @@ export default function Header() {
         <Link to="/chi-siamo">Chi siamo</Link>
         <Link to="/menu">Menù</Link>
         <Link to="/contatti">Dove siamo</Link>
-        <a href="tel:+39059000000"><Phone size={16} style={{display:'inline', marginRight:'8px', verticalAlign:'-3px'}}/> Chiama ora</a>
+        {settings.phone && (
+          <a href={settings.phoneLink || `tel:${settings.phone}`}>
+            <Phone size={16} style={{display:'inline', marginRight:'8px', verticalAlign:'-3px'}}/> Chiama ora
+          </a>
+        )}
         <Link to="/prenota" className="btn btn-primary" style={{marginTop: '8px'}}>
           Prenota un tavolo
         </Link>

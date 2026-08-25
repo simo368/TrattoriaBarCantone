@@ -10,15 +10,21 @@ export default function Modal({ isOpen, onClose, title, children, footer }) {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
+  useEffect(() => {
+    const onKeyDown = (event) => { if (event.key === 'Escape' && isOpen) onClose(); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <>
-      <div className="admin-backdrop" onClick={onClose} />
-      <div className="admin-modal">
+      <div className="admin-backdrop" onClick={onClose} aria-hidden="true" />
+      <div className="admin-modal" role="dialog" aria-modal="true" aria-label={title}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '1.25rem' }}>{title}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}>
+          <button onClick={onClose} aria-label="Chiudi finestra" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-muted)' }}>
             <X size={20} />
           </button>
         </div>
@@ -45,7 +51,7 @@ export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, conf
       footer={
         <>
           <ActionButton variant="outline" onClick={onClose}>{cancelText}</ActionButton>
-          <ActionButton variant={isDanger ? "danger" : "primary"} onClick={() => { onConfirm(); onClose(); }}>{confirmText}</ActionButton>
+          <ActionButton variant={isDanger ? "danger" : "primary"} onClick={async () => { await onConfirm(); onClose(); }}>{confirmText}</ActionButton>
         </>
       }
     >

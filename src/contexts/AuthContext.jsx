@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -17,16 +17,12 @@ export function AuthProvider({ children }) {
         setUser(u);
         try {
           const userDoc = await getDoc(doc(db, 'users', u.uid));
-          if (userDoc.exists()) {
-            setRole(userDoc.data().role);
-          } else {
-            // Se non esiste, assumiamo sia il primo admin e lo creiamo come OWNER
-            await setDoc(doc(db, 'users', u.uid), { role: 'OWNER', email: u.email, active: true });
-            setRole('OWNER');
-          }
+          // Un account Firebase non è automaticamente autorizzato al pannello.
+          // I ruoli vengono assegnati esplicitamente dall'OWNER nel documento users/{uid}.
+          setRole(userDoc.exists() && userDoc.data().active !== false ? userDoc.data().role : null);
         } catch (err) {
           console.error("Errore nel recupero del ruolo:", err);
-          setRole('STAFF'); // Fallback sicuro in caso di errore
+          setRole(null);
         }
       } else {
         setUser(null);

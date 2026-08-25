@@ -79,6 +79,18 @@ export default function Prenota() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) return toast.error("Nome e telefono obbligatori");
+    
+    const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
+    if (!phoneRegex.test(formData.phone) || formData.phone.length < 8) {
+      return toast.error("Inserisci un numero di telefono valido");
+    }
+    
+    if (formData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        return toast.error("Inserisci un indirizzo email valido");
+      }
+    }
     if (isToday) {
       const [h, m] = formData.time.split(':').map(Number);
       if ((h * 60 + m) <= currentMinutes) return toast.error("Orario non più disponibile");
@@ -105,12 +117,12 @@ export default function Prenota() {
 
   if (completed) {
     return (
-      <div className="booking-page" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center' }}>
+      <div className="booking-page min-h-60vh flex-center">
         <div className="container">
-          <div className="booking-card booking-wrapper" style={{ margin: '0 auto', textAlign: 'center' }}>
+          <div className="booking-card booking-wrapper mx-auto text-center">
             <div className="booking-success">
-              <div className="success-icon" style={{color: 'var(--green-ok)'}}>
-                <CheckCircle2 size={64} style={{ margin: '0 auto 16px' }} />
+              <div className="success-icon text-green-ok">
+                <CheckCircle2 size={64} className="mx-auto mb-3 block" />
               </div>
               <h3>Prenotazione Confermata!</h3>
               <p>Ti aspettiamo il <strong>{format(new Date(formData.date), 'dd/MM/yyyy')}</strong> alle ore <strong>{formData.time}</strong> per <strong>{formData.guests} persone</strong>.</p>
@@ -149,9 +161,9 @@ export default function Prenota() {
               <div className="fade-in">
                 <div className="form-group mb-4">
                   <label className="form-label">Data</label>
-                  <div style={{ position: 'relative' }}>
-                    <CalendarDays size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--muted)' }} />
-                    <input type="date" className="form-input" style={{ paddingLeft: '40px' }}
+                  <div className="relative">
+                    <CalendarDays size={18} className="absolute left-12 top-13 text-muted" />
+                    <input type="date" className="form-input pl-40"
                       min={todayStr} 
                       max={maxDateStr}
                       value={formData.date} 
@@ -160,7 +172,7 @@ export default function Prenota() {
                   </div>
                 </div>
                 
-                <label className="form-label mb-2" style={{display:'block'}}>Orari disponibili</label>
+                <label className="form-label mb-2 block">Orari disponibili</label>
                 {isClosed && (
                   <p className="text-muted text-center py-4">Il locale è chiuso in questa data.</p>
                 )}
@@ -189,7 +201,7 @@ export default function Prenota() {
                   </div>
                 )}
 
-                <button className="btn btn-primary btn-full mt-4" onClick={handleNext}>
+                <button className="btn btn-primary btn-full mt-4 flex-center gap-2" onClick={handleNext}>
                   Continua <ArrowRight size={18} />
                 </button>
               </div>
@@ -205,15 +217,15 @@ export default function Prenota() {
                 
                 <div className="form-group mb-4">
                   <label className="form-label">Numero di persone</label>
-                  <div style={{ position: 'relative' }}>
-                    <Users size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--muted)' }} />
+                  <div className="relative">
+                    <Users size={18} className="absolute left-12 top-13 text-muted" />
                     <div className="form-group">
-                      <select className="form-select" style={{ paddingLeft: '40px' }} value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
+                      <select className="form-select pl-40" value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
                         {[...Array(maxPeople)].map((_, i) => (
                           <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'Persona' : 'Persone'}</option>
                         ))}
                       </select>
-                      <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#64748b' }}>
+                      <div className="text-xs mt-1 text-slate">
                         Oltre {maxPeople} persone contattateci telefonicamente.
                       </div>
                     </div>
@@ -221,10 +233,10 @@ export default function Prenota() {
                 </div>
 
                 <div className="flex gap-3 mt-4">
-                  <button className="btn btn-outline flex-1" style={{flex: 1}} onClick={() => setStep(1)}>
+                  <button className="btn btn-outline flex-1 flex-center gap-2" onClick={() => setStep(1)}>
                     <ArrowLeft size={18} /> Indietro
                   </button>
-                  <button className="btn btn-primary flex-2" style={{flex: 2}} onClick={handleNext}>
+                  <button className="btn btn-primary flex-2 flex-center gap-2" onClick={handleNext}>
                     Continua <ArrowRight size={18} />
                   </button>
                 </div>
@@ -261,10 +273,10 @@ export default function Prenota() {
                 </div>
 
                 <div className="flex gap-3 mt-4">
-                  <button type="button" className="btn btn-outline" style={{flex: 1}} onClick={() => setStep(2)}>
+                  <button type="button" className="btn btn-outline flex-1 flex-center gap-2" onClick={() => setStep(2)}>
                     <ArrowLeft size={18} /> Indietro
                   </button>
-                  <button type="submit" className="btn btn-primary" style={{flex: 2}} disabled={submitting}>
+                  <button type="submit" className="btn btn-primary flex-2 flex-center gap-2" disabled={submitting}>
                     {submitting ? "Invio in corso..." : "Conferma Prenotazione"}
                   </button>
                 </div>

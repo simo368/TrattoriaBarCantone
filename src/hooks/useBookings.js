@@ -1,11 +1,12 @@
 // src/hooks/useBookings.js
 import { useState, useEffect } from 'react';
 import {
-  collection, updateDoc, deleteDoc, doc, getDoc,
+  collection, updateDoc, doc, getDoc,
   query, where, orderBy, onSnapshot, serverTimestamp,
   runTransaction
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase';
 import { requestBookingConfirmation, requestBookingCancellation, requestBookingReceived } from '../services/notificationService';
 import { getSettingsOnce } from './useSettings';
 
@@ -25,24 +26,9 @@ export const BOOKING_STATUS = {
 // PUBLIC ACTIONS
 // ---------------------------------------------------------
 
-export async function cancelBooking(id) {
-  const bookingRef = doc(db, 'bookings', id);
-  let bookingData = null;
-  try {
-    const snap = await getDoc(bookingRef);
-    if (snap.exists()) bookingData = snap.data();
-  } catch(e) {}
-
-  await updateDoc(bookingRef, { 
-    status: BOOKING_STATUS.CANCELLED, 
-    updatedAt: serverTimestamp() 
-  });
-
-  if (bookingData && bookingData.email) {
-    getSettingsOnce().then(settings => {
-      requestBookingCancellation(id, bookingData, settings);
-    }).catch(console.warn);
-  }
+export async function cancelBooking(id, cancellationToken) {
+  const cancel = httpsCallable(functions, 'cancelPublicBooking');
+  await cancel({ bookingId: id, cancellationToken });
 }
 
 // ---------------------------------------------------------
@@ -57,22 +43,22 @@ export function useBookings(dateFilter = null) {
     let q;
     if (dateFilter) {
       q = query(
-        collection(db, 'bookings'),
+        collection(db, 'slotOccupancy'),
         where('date', '==', dateFilter),
         orderBy('time')
       );
     } else {
-      // Seleziona solo le prenotazioni da oggi in poi per alleggerire il carico pubblico
+      // Il sito pubblico legge solo i totali anonimi per fascia, mai i dati dei clienti.
       const today = new Date().toISOString().split('T')[0];
       q = query(
-        collection(db, 'bookings'),
+        collection(db, 'slotOccupancy'),
         where('date', '>=', today),
         orderBy('date', 'asc'),
         orderBy('time', 'asc')
       );
     }
     const unsub = onSnapshot(q, snap => {
-      setBookings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setBookings(snap.docs.map(d => ({ id: d.id, ...d.data(), guests: Number(d.data().covers || 0) })));
       setLoading(false);
     }, (err) => {
       console.error(err);
@@ -81,39 +67,19 @@ export function useBookings(dateFilter = null) {
     return unsub;
   }, [dateFilter]);
 
-  const createBooking = async (data, maxCoversPerSlot = 40) => {
-    const { date, time, guests } = data;
-    const occupancyRef = doc(db, 'slotOccupancy', `${date}_${time}`);
-    const bookingRef = doc(collection(db, 'bookings'));
-
-    await runTransaction(db, async (tx) => {
-      const occSnap = await tx.get(occupancyRef);
-      const currentCovers = occSnap.exists() ? occSnap.data().covers : 0;
-      const newTotal = currentCovers + Number(guests);
-
-      if (newTotal > maxCoversPerSlot) {
-        throw new Error('SLOT_FULL');
-      }
-
-      const booking = {
-        ...data,
-        status: BOOKING_STATUS.PENDING,
-        emailStatus: 'pending',
-        createdAt: serverTimestamp(),
-      };
-
-      tx.set(bookingRef, booking);
-      tx.set(occupancyRef, { covers: newTotal, date, time }, { merge: true });
-    });
-
-    const withId = { ...data, status: BOOKING_STATUS.PENDING, createdAt: new Date().toISOString(), id: bookingRef.id };
+  const createBooking = async (data) => {
+    const create = httpsCallable(functions, 'createPublicBooking');
+    const result = await create(data);
+    const { bookingId, cancellationToken } = result.data;
+    const cancellationUrl = `${window.location.origin}${import.meta.env.BASE_URL}prenota/cancella/${bookingId}?token=${encodeURIComponent(cancellationToken)}`;
+    const withId = { ...data, status: BOOKING_STATUS.PENDING, createdAt: new Date().toISOString(), id: bookingId, cancellationUrl };
     
     // Innesco asincrono del sistema notifiche (Ricezione)
     getSettingsOnce().then(settings => {
-      requestBookingReceived(bookingRef.id, withId, settings);
+      requestBookingReceived(bookingId, withId, settings);
     }).catch(console.warn);
 
-    return bookingRef.id;
+    return bookingId;
   };
 
   return { bookings, loading, createBooking, cancelBooking };
@@ -124,26 +90,51 @@ export function useBookings(dateFilter = null) {
 // ---------------------------------------------------------
 
 export async function deleteBooking(id) {
-  await deleteDoc(doc(db, 'bookings', id));
+  const bookingRef = doc(db, 'bookings', id);
+  await runTransaction(db, async (tx) => {
+    const bookingSnap = await tx.get(bookingRef);
+    if (!bookingSnap.exists()) return;
+
+    const booking = bookingSnap.data();
+    const isOccupying = ![BOOKING_STATUS.CANCELLED, BOOKING_STATUS.NO_SHOW].includes(booking.status);
+    if (isOccupying) {
+      const occupancyRef = doc(db, 'slotOccupancy', `${booking.date}_${booking.time}`);
+      const occupancySnap = await tx.get(occupancyRef);
+      if (occupancySnap.exists()) {
+        tx.update(occupancyRef, { covers: Math.max(0, Number(occupancySnap.data().covers || 0) - Number(booking.guests || 0)) });
+      }
+    }
+    tx.delete(bookingRef);
+  });
 }
 
 export async function updateBookingStatus(id, newStatus) {
   const bookingRef = doc(db, 'bookings', id);
+  const settings = await getSettingsOnce();
   let bookingData = null;
-  try {
-    const snap = await getDoc(bookingRef);
-    if (snap.exists()) bookingData = snap.data();
-  } catch(e) {
-    console.error("Error fetching booking to update status:", e);
-  }
 
-  await updateDoc(bookingRef, {
-    status: newStatus,
-    updatedAt: serverTimestamp()
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(bookingRef);
+    if (!snap.exists()) throw new Error('BOOKING_NOT_FOUND');
+
+    bookingData = snap.data();
+    const wasOccupying = ![BOOKING_STATUS.CANCELLED, BOOKING_STATUS.NO_SHOW].includes(bookingData.status);
+    const willOccupy = ![BOOKING_STATUS.CANCELLED, BOOKING_STATUS.NO_SHOW].includes(newStatus);
+
+    if (wasOccupying !== willOccupy) {
+      const occupancyRef = doc(db, 'slotOccupancy', `${bookingData.date}_${bookingData.time}`);
+      const occupancySnap = await tx.get(occupancyRef);
+      const currentCovers = occupancySnap.exists() ? Number(occupancySnap.data().covers || 0) : 0;
+      const nextCovers = willOccupy ? currentCovers + Number(bookingData.guests || 0) : Math.max(0, currentCovers - Number(bookingData.guests || 0));
+      if (willOccupy && nextCovers > (settings.maxCoversPerSlot || 40)) throw new Error('SLOT_FULL');
+      tx.set(occupancyRef, { covers: nextCovers, date: bookingData.date, time: bookingData.time }, { merge: true });
+    }
+
+    tx.update(bookingRef, { status: newStatus, updatedAt: serverTimestamp() });
   });
 
   if (bookingData && bookingData.email) {
-    getSettingsOnce().then(settings => {
+    Promise.resolve(settings).then(settings => {
       const updatedBookingData = { ...bookingData, status: newStatus };
       if (newStatus === BOOKING_STATUS.CONFIRMED && bookingData.status !== BOOKING_STATUS.CONFIRMED) {
         requestBookingConfirmation(id, updatedBookingData, settings);

@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Public Pages

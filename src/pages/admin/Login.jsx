@@ -4,13 +4,25 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminLogin() {
-  const { user, login } = useAuth();
+  const { user, role, login, logout } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  if (user) {
+  if (user && role) {
     return <Navigate to="/admin" />;
+  }
+
+  if (user && !role) {
+    return (
+      <div className="login-page">
+        <div className="login-card">
+          <div className="login-logo"><div className="logo">Accesso <span>non autorizzato</span></div></div>
+          <p className="text-muted">Questo account non ha un ruolo attivo per il pannello. Chiedi al proprietario di abilitarti.</p>
+          <button type="button" className="btn btn-primary btn-full" onClick={logout}>Accedi con un altro account</button>
+        </div>
+      </div>
+    );
   }
 
   const handleLogin = async (e) => {

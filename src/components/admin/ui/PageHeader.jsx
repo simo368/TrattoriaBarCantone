@@ -8,7 +8,7 @@ export default function PageHeader({ title, subtitle, children }) {
         {subtitle && <p className="admin-page-subtitle">{subtitle}</p>}
       </div>
       {children && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div className="admin-page-actions">
           {children}
         </div>
       )}

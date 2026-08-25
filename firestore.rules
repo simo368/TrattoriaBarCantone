@@ -83,17 +83,12 @@ service cloud.firestore {
       // Lettura proprio profilo (serve per getUserRole nelle regole)
       allow read: if isOwnUserDoc(userId);
       
-      // Permetti creazione del proprio documento al primo login (AuthContext lo crea come OWNER)
-      allow create: if isOwnUserDoc(userId) && !exists(/databases/$(database)/documents/users/$(userId));
-      
       // Scrittura/lettura completa solo per OWNER
-      allow read, write: if isOwner();
+      allow create, update, delete: if isOwner();
     }
 
     match /bookings/{bookingId} {
-      allow create: if isStaff() || isValidBookingCreate();
-      allow read: if isStaff() || resource.data.status != 'cancelled';
-      allow update: if isStaff() || isPublicCancel();
+      allow create, read, update, delete: if isStaff();
       allow delete: if isStaff(); // Lo staff può cancellare
     }
 

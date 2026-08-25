@@ -20,23 +20,26 @@ import {
 } from 'lucide-react';
 
 function NavLinks({ location, onNavigate, role }) {
-  const isActive = (path) => location.pathname === path || (path !== '/admin' && location.pathname.startsWith(path));
+  const isActive = (path) => path === '/admin'
+    ? location.pathname === '/admin'
+    : location.pathname === path || location.pathname.startsWith(`${path}/`);
   const isManagerOrOwner = role === 'OWNER' || role === 'MANAGER';
   const isOwner = role === 'OWNER';
 
   return (
     <nav className="admin-nav">
-      <div className="admin-nav-section-title">Principale</div>
+      <div className="admin-nav-section-title">PANORAMICA</div>
       <Link to="/admin" className={`admin-nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={onNavigate}>
-        <LayoutDashboard size={18} /> Panoramica
+        <LayoutDashboard size={18} /> Dashboard
       </Link>
+      
+      <div className="admin-nav-section-title">PRENOTAZIONI</div>
       <Link to="/admin/prenotazioni" className={`admin-nav-item ${isActive('/admin/prenotazioni') ? 'active' : ''}`} onClick={onNavigate}>
         <CalendarDays size={18} /> Prenotazioni
       </Link>
       <Link to="/admin/calendario" className={`admin-nav-item ${isActive('/admin/calendario') ? 'active' : ''}`} onClick={onNavigate}>
-        <CalendarDays size={18} /> Calendario Mensile
+        <CalendarDays size={18} /> Calendario
       </Link>
-      
       {isManagerOrOwner && (
         <Link to="/admin/disponibilita" className={`admin-nav-item ${isActive('/admin/disponibilita') ? 'active' : ''}`} onClick={onNavigate}>
           <Clock size={18} /> Disponibilità
@@ -45,7 +48,7 @@ function NavLinks({ location, onNavigate, role }) {
       
       {isManagerOrOwner && (
         <>
-          <div className="admin-nav-section-title">Contenuti</div>
+          <div className="admin-nav-section-title">CONTENUTI</div>
           <Link to="/admin/menu" className={`admin-nav-item ${isActive('/admin/menu') ? 'active' : ''}`} onClick={onNavigate}>
             <UtensilsCrossed size={18} /> Menù
           </Link>
@@ -57,21 +60,21 @@ function NavLinks({ location, onNavigate, role }) {
       
       {isManagerOrOwner && (
         <>
-          <div className="admin-nav-section-title">Sistema</div>
+          <div className="admin-nav-section-title">ANALISI</div>
           <Link to="/admin/statistiche" className={`admin-nav-item ${isActive('/admin/statistiche') ? 'active' : ''}`} onClick={onNavigate}>
             <BarChart3 size={18} /> Statistiche
           </Link>
+        </>
+      )}
+
+      {isOwner && (
+        <>
+          <div className="admin-nav-section-title">SISTEMA</div>
           <Link to="/admin/impostazioni" className={`admin-nav-item ${isActive('/admin/impostazioni') ? 'active' : ''}`} onClick={onNavigate}>
             <Settings size={18} /> Impostazioni
           </Link>
-        </>
-      )}
-      
-      {isOwner && (
-        <>
-          <div className="admin-nav-section-title">Sicurezza</div>
           <Link to="/admin/utenti" className={`admin-nav-item ${isActive('/admin/utenti') ? 'active' : ''}`} onClick={onNavigate}>
-            <User size={18} /> Gestione Utenti
+            <User size={18} /> Account
           </Link>
         </>
       )}
@@ -86,7 +89,7 @@ export default function AdminLayout() {
 
   useEffect(() => { setMobileOpen(false); }, [location]);
 
-  if (!user) return <Navigate to="/admin/login" />;
+  if (!user || !role) return <Navigate to="/admin/login" replace />;
 
   const handleLogout = async () => {
     await logout();
@@ -112,17 +115,17 @@ export default function AdminLayout() {
 
       <div className="admin-main-wrapper">
         <header className="admin-topbar">
-          <button className="admin-mobile-toggle" onClick={() => setMobileOpen(true)}>
+          <button className="admin-mobile-toggle" onClick={() => setMobileOpen(true)} aria-label="Apri navigazione pannello">
             <MenuIcon size={24} />
           </button>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div className="admin-topbar-actions">
             <Link to="/" target="_blank" className="admin-btn admin-btn-outline admin-btn-sm hidden sm:flex">
               Vai al sito <ExternalLink size={14} />
             </Link>
-            <Link to="/admin/account" className="admin-btn admin-btn-icon" style={{ color: 'var(--admin-text-muted)' }} title="Account">
+            <Link to="/admin/account" className="admin-btn admin-btn-icon" style={{ color: 'var(--admin-text-muted)' }} title="Account" aria-label="Apri account">
               <User size={20} />
             </Link>
-            <button onClick={handleLogout} className="admin-btn admin-btn-icon" style={{ color: 'var(--admin-text-muted)' }} title="Esci">
+            <button onClick={handleLogout} className="admin-btn admin-btn-icon" style={{ color: 'var(--admin-text-muted)' }} title="Esci" aria-label="Esci dal pannello">
               <LogOut size={20} />
             </button>
           </div>

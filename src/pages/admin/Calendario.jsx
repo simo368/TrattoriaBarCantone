@@ -1,24 +1,26 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
-  addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, format, isSameDay 
+  addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, format
 } from 'date-fns';
 import PageHeader from '../../components/admin/ui/PageHeader';
 import CalendarHeader from '../../components/admin/calendar/CalendarHeader';
 import MonthGrid from '../../components/admin/calendar/MonthGrid';
 import DayBookingList from '../../components/admin/calendar/DayBookingList';
 import BookingDetailDrawer from '../../components/admin/bookings/BookingDetailDrawer';
-import { useAdminBookingsList } from '../../hooks/useAdminBookings';
+import BookingFormModal from '../../components/admin/bookings/BookingFormModal';
+import { useAdminBookingsList, adminUpdateBooking } from '../../hooks/useAdminBookings';
 import { updateBookingStatus } from '../../hooks/useBookings';
 import { useSettings } from '../../hooks/useSettings';
+import { isOpen } from '../../utils/availability';
 import toast from 'react-hot-toast';
 
 export default function Calendario() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
 
   const { settings } = useSettings();
-  const closedDays = settings.hours?.closedDays || [];
 
   // Calcoliamo il range di date da scaricare per la griglia del mese corrente
   const queryStart = format(startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }), 'yyyy-MM-dd');
@@ -46,6 +48,18 @@ export default function Calendario() {
     }
   };
 
+  const handleSaveBooking = async (formData) => {
+    if (!editingBooking) return;
+    try {
+      await adminUpdateBooking(editingBooking.id, editingBooking, formData, settings.maxCoversPerSlot);
+      setSelectedBooking(current => current?.id === editingBooking.id ? { ...current, ...formData } : current);
+      toast.success('Prenotazione aggiornata');
+    } catch (error) {
+      toast.error(error.message === 'SLOT_FULL' ? 'Capienza massima raggiunta per questo orario.' : 'Impossibile aggiornare la prenotazione.');
+      throw error;
+    }
+  };
+
   // Selezionando un giorno aggiorno anche il mese visualizzato se il giorno cliccato è di un altro mese
   const handleSelectDate = (date) => {
     setSelectedDate(date);
@@ -68,10 +82,10 @@ export default function Calendario() {
       )}
 
       {/* Layout: su Desktop il calendario a sinistra e i dettagli a destra. Su Mobile uno sotto l'altro. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} className="xl:flex-row">
+      <div className="admin-calendar-layout">
         
         {/* Sinistra: Calendario Mensile */}
-        <div style={{ flex: '2', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <CalendarHeader 
             currentDate={currentDate} 
             onPrevMonth={handlePrevMonth} 
@@ -90,18 +104,18 @@ export default function Calendario() {
               selectedDate={selectedDate} 
               onSelectDate={handleSelectDate} 
               bookings={bookings} 
-              closedDays={closedDays}
+              settings={settings}
             />
           </div>
         </div>
 
         {/* Destra: Dettaglio Giorno */}
-        <div style={{ flex: '1', minWidth: '320px' }}>
+        <div>
           <DayBookingList 
             selectedDate={selectedDate} 
             bookings={bookings} 
             onBookingClick={setSelectedBooking} 
-            isClosed={closedDays.includes(format(selectedDate, 'yyyy-MM-dd'))}
+            isClosed={!isOpen(selectedDate, settings)}
           />
         </div>
 
@@ -112,12 +126,15 @@ export default function Calendario() {
         onClose={() => setSelectedBooking(null)} 
         booking={selectedBooking} 
         onStatusChange={handleStatusChange}
-        onEdit={() => {
-          // Opzionale: per modificare dal calendario si potrebbe aprire il form modal qui,
-          // ma per mantenere il calendario semplice, potremmo consigliare di usare la pagina prenotazioni,
-          // o implementare il formModal anche in questa view.
-          toast.info("Per modificare data/ora, usa la vista Prenotazioni.");
-        }}
+        onEdit={(booking) => { setSelectedBooking(null); setEditingBooking(booking); }}
+      />
+
+      <BookingFormModal
+        isOpen={!!editingBooking}
+        onClose={() => setEditingBooking(null)}
+        initialData={editingBooking}
+        onSave={handleSaveBooking}
+        bookingsList={bookings}
       />
     </div>
   );

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { cancelBooking } from '../hooks/useBookings';
-import { bookingsStore } from '../utils/bookingsLocalStore';
 
 export default function CancellaPrenotazione() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const [status, setStatus] = useState(id ? 'loading' : 'error');
 
   useEffect(() => {
@@ -15,21 +16,17 @@ export default function CancellaPrenotazione() {
 
     (async () => {
       try {
-        await cancelBooking(id);
+        await cancelBooking(id, token);
         if (!cancelled) setStatus('success');
       } catch {
-        const local = bookingsStore.getAll().find(b => b.id === id);
-        if (local) {
-          bookingsStore.cancel(id);
-          if (!cancelled) setStatus('success');
-        } else if (!cancelled) {
+        if (!cancelled) {
           setStatus('error');
         }
       }
     })();
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, token]);
 
   return (
     <div className="booking-page" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center' }}>

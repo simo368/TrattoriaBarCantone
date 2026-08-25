@@ -4,6 +4,7 @@ import EmptyState from '../ui/EmptyState';
 import { CalendarX2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { BOOKING_STATUS } from '../../../hooks/useBookings';
 
 export default function DayBookingList({ selectedDate, bookings, onBookingClick, isClosed }) {
   const dayStr = format(selectedDate, 'yyyy-MM-dd');
@@ -11,13 +12,15 @@ export default function DayBookingList({ selectedDate, bookings, onBookingClick,
   const capitalizedTitle = dayTitle.charAt(0).toUpperCase() + dayTitle.slice(1);
 
   const dayBookings = bookings.filter(b => b.date === dayStr);
+  const activeBookings = dayBookings.filter(b => ![BOOKING_STATUS.CANCELLED, BOOKING_STATUS.NO_SHOW].includes(b.status));
+  const totalCovers = activeBookings.reduce((sum, booking) => sum + Number(booking.guests || 0), 0);
 
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: 'var(--admin-radius)', border: '1px solid var(--admin-border)', display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '16px', borderBottom: '1px solid var(--admin-border)', backgroundColor: '#fafafa', borderRadius: 'var(--admin-radius) var(--admin-radius) 0 0' }}>
         <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>{capitalizedTitle}</h3>
         <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--admin-text-muted)' }}>
-          {dayBookings.length} {dayBookings.length === 1 ? 'prenotazione' : 'prenotazioni'}
+          {activeBookings.length} {activeBookings.length === 1 ? 'prenotazione attiva' : 'prenotazioni attive'} · {totalCovers} coperti
         </p>
       </div>
 

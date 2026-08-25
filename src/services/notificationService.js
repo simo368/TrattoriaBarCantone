@@ -35,8 +35,7 @@ const updateEmailStatus = async (bookingId, status, errorMsg = null) => {
  */
 const sendEmailJS = async (bookingData, subject, htmlMessage) => {
   if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
-    console.warn('[EmailJS] Configurazione mancante. Email non inviata (sviluppo/mock mode).');
-    return true; // Ritorniamo true in modo da non bloccare l'app se manca la config
+    throw new Error('EMAIL_NOT_CONFIGURED');
   }
 
   try {

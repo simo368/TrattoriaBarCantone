@@ -86,6 +86,25 @@ export default function Impostazioni() {
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Descrizione Pubblica (Chi siamo)</label>
               <textarea className="admin-input" rows="3" value={formData.description || ''} onChange={e => updateRootField('description', e.target.value)}></textarea>
             </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Prezzo Menù Fisso (€)</label>
+              <input type="number" step="0.50" className="admin-input" value={formData.prices?.menuFisso || 15} onChange={e => updateNestedField('prices', 'menuFisso', Number(e.target.value))} />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Prezzo Coperto (€)</label>
+              <input type="number" step="0.50" className="admin-input" value={formData.prices?.coperto || 2} onChange={e => updateNestedField('prices', 'coperto', Number(e.target.value))} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Categorie Menù (separate da virgola)</label>
+              <input 
+                className="admin-input" 
+                value={formData.menuCategories ? formData.menuCategories.join(', ') : 'antipasti, primi, secondi, contorni, dolci, vini'} 
+                onChange={e => updateRootField('menuCategories', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} 
+              />
+              <p style={{ fontSize: '0.85rem', color: 'var(--admin-text-muted)', marginTop: '4px' }}>
+                Queste categorie determinano le tab del menù e l'ordine di visualizzazione.
+              </p>
+            </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <h4 style={{ margin: '16px 0 8px', fontSize: '1.1rem' }}>Indirizzo</h4>
             </div>

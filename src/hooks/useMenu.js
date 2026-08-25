@@ -1,36 +1,35 @@
-// src/hooks/useMenu.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, orderBy, query, serverTimestamp, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
-
-const CATEGORIES = ['antipasti', 'primi', 'secondi', 'dolci', 'vini'];
-
-const DEFAULT_MENU = {
-  antipasti: [],
-  primi: [],
-  secondi: [],
-  dolci: [],
-  vini: [],
-};
+import { useSettings } from './useSettings';
 
 export function useMenu() {
-  const [menu, setMenu] = useState(DEFAULT_MENU);
+  const { settings } = useSettings();
+  const [menu, setMenu] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // Categorie dinamiche
+  const CATEGORIES = useMemo(() => {
+    return settings?.menuCategories || ['antipasti', 'primi', 'secondi', 'contorni', 'dolci', 'vini'];
+  }, [settings?.menuCategories]);
 
   useEffect(() => {
     const q = query(collection(db, 'menu'), orderBy('order', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      const grouped = { antipasti: [], primi: [], secondi: [], dolci: [], vini: [] };
+      const grouped = {};
+      CATEGORIES.forEach(c => grouped[c] = []);
+      
       snap.docs.forEach(d => {
         const item = { id: d.id, ...d.data() };
-        if (grouped[item.category]) grouped[item.category].push(item);
+        if (!grouped[item.category]) grouped[item.category] = [];
+        grouped[item.category].push(item);
       });
 
-      setMenu(snap.empty ? DEFAULT_MENU : grouped);
+      setMenu(snap.empty ? {} : grouped);
       setLoading(false);
     }, () => setLoading(false));
     return unsub;
-  }, []);
+  }, [CATEGORIES]);
 
   const addDish = (category, data) =>
     addDoc(collection(db, 'menu'), { ...data, category, active: true, soldOut: false, createdAt: serverTimestamp(), order: Date.now() });
@@ -40,9 +39,7 @@ export function useMenu() {
 
   const deleteDish = (id) => deleteDoc(doc(db, 'menu', id));
 
-  // Esegue un aggiornamento batch per salvare l'ordinamento di una categoria
   const reorderMenu = async (reorderedItems) => {
-    // reorderedItems è un array di oggetti: { id, order }
     const { writeBatch } = await import('firebase/firestore');
     const batch = writeBatch(db);
     reorderedItems.forEach(item => {
