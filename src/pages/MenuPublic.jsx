@@ -1,362 +1,314 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMenu } from '../hooks/useMenu';
 
 export default function MenuPublic() {
   const { menu, loading, CATEGORIES } = useMenu();
-  const [activeCategory, setActiveCategory] = useState('');
-  
+  const [activeTab, setActiveTab] = useState('primi');
+
   const categories = CATEGORIES || ['antipasti', 'primi', 'secondi', 'contorni', 'dolci', 'vini'];
-  
-  const categoryRefs = useRef({});
 
-  // Scorre alla categoria
-  const scrollToCategory = (cat) => {
-    setActiveCategory(cat);
-    const element = categoryRefs.current[cat];
-    if (element) {
-      // Calcola l'offset per l'header + sticky nav (circa 130px)
-      const headerOffset = 130; 
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - headerOffset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // IntersectionObserver per aggiornare la categoria attiva durante lo scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      // Trova le entry visibili
-      const visibleEntries = entries.filter(entry => entry.isIntersecting);
-      if (visibleEntries.length > 0) {
-        // Prendi quella più in alto
-        const topEntry = visibleEntries.reduce((prev, current) => 
-          (prev.boundingClientRect.top < current.boundingClientRect.top) ? prev : current
-        );
-        if (topEntry && topEntry.target.dataset.category) {
-          setActiveCategory(topEntry.target.dataset.category);
-        }
-      }
-    }, {
-      rootMargin: '-130px 0px -70% 0px', // Trigger quando l'elemento è nella parte alta
-      threshold: 0
-    });
-
-    Object.values(categoryRefs.current).forEach(ref => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => observer.disconnect();
-  }, [loading, menu]);
-
-  // Imposta categoria iniziale se vuota
-  useEffect(() => {
-    if (!activeCategory && categories.length > 0) {
-      setActiveCategory(categories[0]);
-    }
-  }, [categories, activeCategory]);
-
-  // Raggruppa i piatti
-  const groupedMenu = {};
-  if (Array.isArray(menu)) {
-    categories.forEach(cat => {
-      groupedMenu[cat] = menu.filter(m => m.category === cat && m.active !== false);
-    });
-  } else {
-    categories.forEach(cat => {
-      groupedMenu[cat] = (menu[cat] || []).filter(m => m.active !== false);
-    });
-  }
+  const currentDishes = Array.isArray(menu) 
+    ? menu.filter(m => m.category === activeTab && m.active !== false)
+    : (menu[activeTab] || []).filter(m => m.active !== false);
 
   return (
-    <main className="menu-page" style={{ backgroundColor: 'var(--c-crema)', minHeight: '100vh', paddingBottom: '100px' }}>
-      
-      {/* Intestazione Semplificata */}
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '100px 20px 30px',
-        backgroundColor: 'var(--c-crema-dark)'
-      }}>
-        <h1 style={{ 
-          fontFamily: 'var(--font-serif)', 
-          fontSize: 'clamp(2.5rem, 5vw, 4rem)', 
-          color: 'var(--c-forest)', 
-          margin: 0
-        }}>
-          Il Menù
-        </h1>
-      </div>
-
-      {/* Sticky Navigation */}
-      <div style={{
-        position: 'sticky',
-        top: '60px', // Header di base circa 60-70px
-        zIndex: 100,
-        backgroundColor: 'rgba(244, 241, 236, 0.95)', // var(--c-crema) con trasparenza
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        padding: '16px 20px',
-        borderBottom: '1px solid rgba(26,36,33,0.08)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
-      }}>
-        <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ 
-            display: 'flex', 
-            gap: '24px', 
-            overflowX: 'auto', 
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none'
-          }}>
-            <style>{`
-              div::-webkit-scrollbar { display: none; }
-            `}</style>
-            {categories.map((cat) => (
-              <button 
-                key={cat} 
-                onClick={() => scrollToCategory(cat)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '1.1rem',
-                  fontWeight: activeCategory === cat ? 600 : 400,
-                  color: activeCategory === cat ? 'var(--c-forest)' : 'var(--c-forest-light)',
-                  textTransform: 'capitalize',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  padding: '4px 0',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {cat}
-                {activeCategory === cat && (
-                  <span style={{ 
-                    position: 'absolute', 
-                    bottom: '-8px', 
-                    left: '50%', 
-                    transform: 'translateX(-50%)',
-                    width: '6px', 
-                    height: '6px', 
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--c-terra)' 
-                  }} />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="container" style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
+    <main className="menu-page" style={{ 
+      backgroundColor: 'var(--c-crema)', 
+      minHeight: '100vh',
+      color: 'var(--c-forest)'
+    }}>
+      <style>{`
+        .editorial-layout {
+          display: flex;
+          flex-direction: column;
+          gap: 60px;
+          padding: 60px 0 120px;
+        }
+        .editorial-col-left {
+          width: 100%;
+        }
+        .editorial-col-right {
+          width: 100%;
+        }
         
-        {/* Menù Fisso */}
-        <div style={{ 
-          backgroundColor: 'var(--c-crema-dark)', 
-          padding: '32px', 
-          borderRadius: '8px',
-          marginBottom: '60px',
-          borderLeft: '4px solid var(--c-terra)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
-            <h3 style={{ 
+        @media (min-width: 1024px) {
+          .editorial-layout {
+            flex-direction: row;
+            gap: 100px;
+            padding: 100px 0 160px;
+            align-items: flex-start;
+          }
+          .editorial-col-left {
+            width: 40%;
+            position: sticky;
+            top: 100px;
+          }
+          .editorial-col-right {
+            width: 60%;
+          }
+        }
+        
+        .cats-nav::-webkit-scrollbar { 
+          display: none; 
+        }
+      `}</style>
+
+      <div className="container" style={{ padding: '0 24px', maxWidth: '1280px', margin: '0 auto' }}>
+        
+        <div className="editorial-layout">
+          
+          {/* COLONNA SINISTRA: INTRODUZIONE E FOTOGRAFIA (Sticky su Desktop) */}
+          <div className="editorial-col-left">
+            <h1 style={{ 
               fontFamily: 'var(--font-serif)', 
-              fontSize: '1.8rem', 
+              fontSize: 'clamp(3rem, 6vw, 4.5rem)', 
               color: 'var(--c-forest)', 
-              margin: 0 
+              lineHeight: 1.05, 
+              marginBottom: '32px',
+              marginTop: 0,
+              fontWeight: 400,
+              letterSpacing: '-0.02em'
             }}>
-              Menù Fisso Feriale
-            </h3>
-            <span style={{ 
+              Il nostro menù
+            </h1>
+            <p style={{ 
               fontFamily: 'var(--font-sans)', 
-              fontSize: '1.4rem', 
-              color: 'var(--c-terra)', 
-              fontWeight: 600 
+              fontSize: '1.25rem', 
+              color: 'var(--c-forest)', 
+              opacity: 0.85,
+              lineHeight: 1.6, 
+              marginBottom: '56px',
+              maxWidth: '90%'
             }}>
-              €15.00
-            </span>
+              Un atto d'amore per il nostro territorio. Sfoglia ruvida tirata a mano, cotture lente e il calore della tradizione emiliana, per farti ritrovare il vero sapore di casa.
+            </p>
+            
+            <div style={{ 
+              width: '100%', 
+              aspectRatio: '3/4', 
+              overflow: 'hidden', 
+              backgroundColor: 'var(--c-crema-dark)'
+            }}>
+              <img 
+                src="/img/gallery-tortelli.jpg" 
+                alt="Dettaglio dei nostri tortelli" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
           </div>
-          <p style={{ 
-            fontFamily: 'var(--font-sans)', 
-            fontSize: '1rem', 
-            color: 'var(--c-text-muted)', 
-            margin: 0,
-            lineHeight: 1.5
-          }}>
-            Disponibile a pranzo dal lunedì al venerdì. Include primo, secondo con contorno, acqua, quarto di vino e caffè.
-          </p>
-        </div>
 
-        {/* Categories and Dishes */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '1.2rem', color: 'var(--c-forest-light)' }}>
-              Caricamento del menù...
-            </span>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '60px' }}>
-            {categories.map((cat) => {
-              const dishes = groupedMenu[cat] || [];
-              
-              // Nascondi categorie vuote
-              if (dishes.length === 0) return null;
-
-              return (
-                <section 
+          {/* COLONNA DESTRA: CATEGORIE, MENU FISSO, PIATTI */}
+          <div className="editorial-col-right">
+            
+            {/* NAVIGAZIONE CATEGORIE */}
+            <div className="cats-nav" style={{ 
+              display: 'flex', 
+              gap: '32px', 
+              overflowX: 'auto', 
+              paddingBottom: '8px',
+              marginBottom: '64px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}>
+              {categories.map((cat) => (
+                <button 
                   key={cat} 
-                  ref={el => categoryRefs.current[cat] = el}
-                  data-category={cat}
-                  style={{ scrollMarginTop: '150px' }} // Fallback per lo scroll nativo se si usa #hash
-                >
-                  <h2 style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: '2.5rem',
+                  onClick={() => setActiveTab(cat)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '1.15rem',
+                    fontWeight: activeTab === cat ? 500 : 400,
                     color: 'var(--c-forest)',
+                    opacity: activeTab === cat ? 1 : 0.5,
                     textTransform: 'capitalize',
-                    borderBottom: '2px solid var(--c-crema-dark)',
-                    paddingBottom: '16px',
-                    marginBottom: '32px',
-                    marginTop: 0
-                  }}>
-                    {cat}
-                  </h2>
-                  
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-                    gap: '24px' 
-                  }}>
-                    {dishes.map((dish, i) => (
-                      <div 
-                        key={dish.id || i} 
-                        className="dish-card" // Added a class just in case we want to target it with CSS later
-                        style={{ 
-                          opacity: dish.soldOut ? 0.7 : 1,
-                          backgroundColor: '#ffffff',
-                          borderRadius: '16px',
-                          padding: '28px',
-                          boxShadow: '0 8px 30px rgba(26,36,33,0.06)',
-                          border: '1px solid rgba(26,36,33,0.04)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    padding: '0 0 8px 0',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {cat}
+                  {activeTab === cat && (
+                    <span style={{ 
+                      position: 'absolute', 
+                      bottom: 0, 
+                      left: '0', 
+                      width: '100%', 
+                      height: '2px', 
+                      backgroundColor: 'var(--c-terra)' 
+                    }} />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* MENU FISSO (Sezione Editoriale) */}
+            <div style={{ 
+              backgroundColor: 'rgba(244, 241, 236, 0.6)', /* crema-dark molto leggero */
+              padding: '40px 32px', 
+              marginBottom: '72px',
+              borderTop: '2px solid var(--c-terra)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px', gap: '16px' }}>
+                <h3 style={{ 
+                  fontFamily: 'var(--font-serif)', 
+                  fontSize: '2rem', 
+                  color: 'var(--c-forest)', 
+                  margin: 0,
+                  fontWeight: 400
+                }}>
+                  Menù Feriale
+                </h3>
+                <span style={{ 
+                  fontFamily: 'var(--font-sans)', 
+                  fontSize: '1.25rem', 
+                  color: 'var(--c-terra)', 
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap'
+                }}>
+                  € 15
+                </span>
+              </div>
+              <p style={{ 
+                fontFamily: 'var(--font-sans)', 
+                fontSize: '1.1rem', 
+                color: 'var(--c-forest)', 
+                opacity: 0.8,
+                margin: 0,
+                lineHeight: 1.6
+              }}>
+                Disponibile a pranzo dal lunedì al venerdì. Include primo, secondo con contorno, acqua, quarto di vino e caffè.
+              </p>
+            </div>
+
+            {/* LISTA PIATTI (Composizione Editoriale) */}
+            {loading ? (
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '1.2rem', color: 'var(--c-forest)', opacity: 0.6, textAlign: 'center', padding: '40px 0' }}>
+                Lettura della carta in corso...
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
+                {currentDishes.length === 0 ? (
+                  <div style={{ fontStyle: 'italic', color: 'var(--c-forest)', opacity: 0.6 }}>
+                    Nessun piatto disponibile in questa selezione al momento.
+                  </div>
+                ) : (
+                  currentDishes.map((dish, i) => (
+                    <div key={dish.id || i} style={{ 
+                      opacity: dish.soldOut ? 0.6 : 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'baseline',
+                        gap: '24px'
+                      }}>
+                        <h4 style={{ 
+                          fontFamily: 'var(--font-serif)', 
+                          fontSize: '1.6rem', 
+                          fontWeight: 400,
+                          color: 'var(--c-forest)', 
+                          margin: 0,
                           display: 'flex',
-                          flexDirection: 'column',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {/* A subtle colored line on top for extra beauty */}
-                        <div style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: '4px',
-                          backgroundColor: 'var(--c-terra)',
-                          opacity: 0.8
-                        }} />
-
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'flex-start',
-                          gap: '16px',
-                          marginBottom: '16px'
+                          alignItems: 'center',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                          lineHeight: 1.2
                         }}>
-                          <h4 style={{ 
-                            fontFamily: 'var(--font-serif)', 
-                            fontSize: '1.4rem', 
-                            fontWeight: 600,
-                            color: 'var(--c-forest)', 
-                            margin: 0,
-                            lineHeight: 1.2
-                          }}>
-                            {dish.name}
-                          </h4>
-                          
-                          {dish.price && (
+                          {dish.name}
+                          {dish.soldOut && (
                             <span style={{ 
-                              fontFamily: 'var(--font-sans)', 
-                              fontSize: '1.25rem', 
-                              color: 'var(--c-terra)', 
-                              fontWeight: 700,
-                              whiteSpace: 'nowrap',
-                              backgroundColor: 'var(--c-crema)',
-                              padding: '6px 14px',
-                              borderRadius: '24px',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                            }}>
-                              € {Number(dish.price).toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {(dish.desc || dish.description) && (
-                          <p style={{ 
-                            fontFamily: 'var(--font-sans)',
-                            fontSize: '1rem', 
-                            color: 'var(--c-text-muted)', 
-                            margin: 0, 
-                            lineHeight: '1.6',
-                            flexGrow: 1
-                          }}>
-                            {dish.desc || dish.description}
-                          </p>
-                        )}
-
-                        {dish.soldOut && (
-                          <div style={{ marginTop: '20px' }}>
-                            <span style={{ 
-                              fontSize: '0.75rem', 
-                              fontWeight: 700, 
+                              fontFamily: 'var(--font-sans)',
+                              fontSize: '0.8rem', 
+                              fontWeight: 600, 
                               textTransform: 'uppercase', 
-                              letterSpacing: '0.1em', 
-                              color: 'var(--c-terra)', 
-                              backgroundColor: 'rgba(217, 72, 15, 0.1)',
-                              padding: '6px 12px', 
-                              borderRadius: '4px',
-                              display: 'inline-block'
+                              letterSpacing: '0.08em', 
+                              color: 'var(--c-terra)'
                             }}>
                               Esaurito
                             </span>
-                          </div>
+                          )}
+                        </h4>
+                        
+                        {dish.price && (
+                          <span style={{ 
+                            fontFamily: 'var(--font-sans)', 
+                            fontSize: '1.3rem', 
+                            color: 'var(--c-forest)', 
+                            opacity: 0.9,
+                            fontWeight: 400,
+                            whiteSpace: 'nowrap'
+                          }}>
+                            € {Number(dish.price).toFixed(0)}
+                          </span>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+                      
+                      {(dish.desc || dish.description) && (
+                        <p style={{ 
+                          fontFamily: 'var(--font-sans)',
+                          fontSize: '1.1rem', 
+                          color: 'var(--c-forest)', 
+                          opacity: 0.7,
+                          margin: 0, 
+                          lineHeight: 1.6,
+                          maxWidth: '90%'
+                        }}>
+                          {dish.desc || dish.description}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+            
+            <div style={{ marginTop: '100px', paddingTop: '40px', borderTop: '1px solid rgba(26,36,33,0.1)' }}>
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.95rem', color: 'var(--c-forest)', opacity: 0.7, fontStyle: 'italic', lineHeight: 1.6 }}>
+                Coperto e pane € 2.00.<br/>
+                In caso di allergie o intolleranze alimentari, vi invitiamo a informare il nostro personale.
+              </p>
+            </div>
+            
           </div>
-        )}
-        
-        <div style={{ marginTop: '80px', paddingTop: '40px', borderTop: '1px solid rgba(26,36,33,0.1)', textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.95rem', color: 'var(--c-text-muted)', fontStyle: 'italic', marginBottom: '32px' }}>
-            Coperto e pane €2.00.<br/>
-            In caso di allergie o intolleranze alimentari, vi invitiamo a informare il nostro personale.
+        </div>
+      </div>
+
+      {/* CTA PRENOTAZIONE (Pulita e Minimal) */}
+      <section style={{ padding: '80px 24px 120px', textAlign: 'center' }}>
+        <div className="container" style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <p style={{ 
+            fontFamily: 'var(--font-sans)', 
+            fontSize: '1.1rem', 
+            color: 'var(--c-forest)', 
+            opacity: 0.7,
+            marginBottom: '24px'
+          }}>
+            Vieni a provare la vera tradizione emiliana.
           </p>
-          
-          {/* CTA Prenota posizionata in fondo per invogliare dopo la lettura */}
           <Link to="/prenota" className="btn" style={{ 
             display: 'inline-block',
-            backgroundColor: 'var(--c-terra)',
-            color: '#fff',
+            backgroundColor: 'transparent',
+            color: 'var(--c-forest)',
+            border: '1px solid var(--c-forest)',
             textDecoration: 'none',
             fontFamily: 'var(--font-sans)',
             fontSize: '1.1rem',
             fontWeight: 500,
-            padding: '16px 40px',
-            borderRadius: '4px',
-            transition: 'opacity 0.3s ease'
+            padding: '16px 48px',
+            transition: 'all 0.3s ease'
           }}>
             Prenota un tavolo
           </Link>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
