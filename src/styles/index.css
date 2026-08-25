@@ -1239,6 +1239,7 @@
 
 .public-app .bg-forest { background-color: var(--c-forest); }
 .public-app .bg-crema { background-color: var(--c-crema); }
+.public-app .bg-crema-chiaro { background-color: var(--c-crema-chiaro); }
 .public-app .bg-crema-dark { background-color: var(--c-crema-chiaro); }
 .public-app .bg-terra { background-color: var(--c-terra); }
 
@@ -1327,6 +1328,59 @@
 .public-app .btn-xl { padding: 20px 48px; font-size: 1.2rem; }
 
 .public-app .img-tall { height: 700px; object-fit: cover; width: 100%; }
+
+/* Classi aggiuntive per Home */
+.public-app .contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.public-app .schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.public-app .schedule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.public-app .schedule-item strong {
+  font-weight: 600;
+  color: var(--c-forest);
+}
+
+.public-app .schedule-item span {
+  color: var(--c-text-muted);
+}
+
+/* Classi aggiuntive per Footer */
+.public-app .footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.public-app .social-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* Classi aggiuntive per MobileBar */
+.public-app .mobile-bar-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
 .public-app .gallery-img-tall { height: 500px; object-fit: cover; width: 100%; }
 
 .public-app .signature-menu-list { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
@@ -1462,6 +1516,34 @@
   .public-app .h-70vh { height: 50vh; }
   .public-app .img-tall { height: 400px; }
   .public-app .gallery-img-tall { height: 300px; }
+}
+
+/* ── UTILITY CLASSI MANCANTI ────────────────────────────── */
+.public-app .home-page,
+.public-app .about-page,
+.public-app .contact-page,
+.public-app .menu-page-new { min-width: 0; }
+.public-app .pr-5 { padding-right: 1.25rem; }
+.public-app .pt-5 { padding-top: 1.25rem; }
+.public-app .mt-1 { margin-top: 0.25rem; }
+.public-app .mb-2 { margin-bottom: 0.5rem; }
+.public-app .text-forest-dark { color: var(--c-forest-dark); }
+.public-app .border-t { border-top: 1px solid var(--c-line); }
+.public-app .fade-in { animation: fadeIn 0.4s ease-out; }
+.public-app .success-icon { font-size: 3.5rem; margin-bottom: 20px; }
+.public-app .open { visibility: visible; opacity: 1; }
+.public-app .scrolled { box-shadow: var(--shadow-soft); }
+.public-app .active { color: var(--c-terra); }
+.public-app .selected { background-color: var(--c-terra); }
+.public-app .done { color: var(--c-green-ok); }
+.public-app .full { opacity: 0.4; cursor: not-allowed; }
+.public-app .menu-content { flex: 1; min-width: 0; }
+.public-app .menu-list { display: flex; flex-direction: column; gap: 40px; }
+.public-app .menu-footer-editorial { margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--c-line); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 480px) {
