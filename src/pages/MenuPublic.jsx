@@ -227,62 +227,68 @@ export default function MenuPublic() {
                     {cat}
                   </h2>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+                    gap: '24px' 
+                  }}>
                     {dishes.map((dish, i) => (
-                      <div key={dish.id || i} style={{ 
-                        opacity: dish.soldOut ? 0.6 : 1,
-                        transition: 'opacity 0.2s ease'
-                      }}>
+                      <div 
+                        key={dish.id || i} 
+                        className="dish-card" // Added a class just in case we want to target it with CSS later
+                        style={{ 
+                          opacity: dish.soldOut ? 0.7 : 1,
+                          backgroundColor: '#ffffff',
+                          borderRadius: '16px',
+                          padding: '28px',
+                          boxShadow: '0 8px 30px rgba(26,36,33,0.06)',
+                          border: '1px solid rgba(26,36,33,0.04)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {/* A subtle colored line on top for extra beauty */}
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: '4px',
+                          backgroundColor: 'var(--c-terra)',
+                          opacity: 0.8
+                        }} />
+
                         <div style={{ 
                           display: 'flex', 
                           justifyContent: 'space-between', 
-                          alignItems: 'baseline',
+                          alignItems: 'flex-start',
                           gap: '16px',
-                          marginBottom: '8px'
+                          marginBottom: '16px'
                         }}>
                           <h4 style={{ 
-                            fontFamily: 'var(--font-sans)', 
-                            fontSize: '1.25rem', 
+                            fontFamily: 'var(--font-serif)', 
+                            fontSize: '1.4rem', 
                             fontWeight: 600,
                             color: 'var(--c-forest)', 
                             margin: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            flexWrap: 'wrap'
+                            lineHeight: 1.2
                           }}>
                             {dish.name}
-                            {dish.soldOut && (
-                              <span style={{ 
-                                fontSize: '0.7rem', 
-                                fontWeight: 700, 
-                                textTransform: 'uppercase', 
-                                letterSpacing: '0.05em', 
-                                color: 'var(--c-terra)', 
-                                border: '1px solid var(--c-terra)',
-                                padding: '2px 6px', 
-                                borderRadius: '4px' 
-                              }}>
-                                Esaurito
-                              </span>
-                            )}
                           </h4>
                           
-                          {/* Puntinatura o spaziatore */}
-                          <div style={{
-                            flexGrow: 1,
-                            borderBottom: '2px dotted rgba(26,36,33,0.15)',
-                            position: 'relative',
-                            top: '-6px'
-                          }} />
-
                           {dish.price && (
                             <span style={{ 
                               fontFamily: 'var(--font-sans)', 
                               fontSize: '1.25rem', 
-                              color: 'var(--c-forest)', 
-                              fontWeight: 500,
-                              whiteSpace: 'nowrap'
+                              color: 'var(--c-terra)', 
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              backgroundColor: 'var(--c-crema)',
+                              padding: '6px 14px',
+                              borderRadius: '24px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
                             }}>
                               € {Number(dish.price).toFixed(2)}
                             </span>
@@ -296,10 +302,28 @@ export default function MenuPublic() {
                             color: 'var(--c-text-muted)', 
                             margin: 0, 
                             lineHeight: '1.6',
-                            maxWidth: '90%'
+                            flexGrow: 1
                           }}>
                             {dish.desc || dish.description}
                           </p>
+                        )}
+
+                        {dish.soldOut && (
+                          <div style={{ marginTop: '20px' }}>
+                            <span style={{ 
+                              fontSize: '0.75rem', 
+                              fontWeight: 700, 
+                              textTransform: 'uppercase', 
+                              letterSpacing: '0.1em', 
+                              color: 'var(--c-terra)', 
+                              backgroundColor: 'rgba(217, 72, 15, 0.1)',
+                              padding: '6px 12px', 
+                              borderRadius: '4px',
+                              display: 'inline-block'
+                            }}>
+                              Esaurito
+                            </span>
+                          </div>
                         )}
                       </div>
                     ))}
