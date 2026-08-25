@@ -164,7 +164,7 @@ export default function Disponibilita() {
                           display: 'inline-block', padding: '6px 12px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'center',
                           backgroundColor: isClosed ? 'var(--admin-danger-light)' : 'var(--admin-success-light)',
                           color: isClosed ? 'var(--admin-danger)' : 'var(--admin-success)',
-                          border: \`1px solid \${isClosed ? 'var(--admin-danger)' : 'var(--admin-success)'}\`
+                          border: `1px solid ${isClosed ? 'var(--admin-danger)' : 'var(--admin-success)'}`
                         }}
                       >
                         {isClosed ? 'GIORNO DI CHIUSURA' : 'APERTO'}
