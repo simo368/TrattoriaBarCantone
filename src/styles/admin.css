@@ -2,17 +2,18 @@
 /* Ambito: Solo elementi dentro .admin-app o componenti admin specifici */
 
 :root {
-  /* Admin Palette */
-  --admin-bg: #f7f5f0;
+  /* Admin Palette - Brand Trattoria */
+  --admin-bg: #F6F1E7; /* Crema */
   --admin-surface: #ffffff;
-  --admin-text-main: #1f2b26;
-  --admin-text-muted: #657069;
-  --admin-border: #e5e0d7;
+  --admin-text-main: #172F27; /* Verde Bosco Scuro */
+  --admin-text-muted: #6E716A; /* Grigio caldo */
+  --admin-border: #DDD5C7;
   
   /* Brand Accent */
-  --admin-primary: #a64b2a;
-  --admin-primary-hover: #873b20;
-  --admin-primary-light: #f8e8df;
+  --admin-primary: #A9563B; /* Terracotta */
+  --admin-primary-hover: #8F452F;
+  --admin-primary-light: rgba(169, 86, 59, 0.1);
+  --admin-secondary: #203D32; /* Verde Bosco */
   
   /* Status Colors */
   --admin-success: #10b981;
@@ -26,15 +27,15 @@
   
   /* Layout */
   --admin-sidebar-width: 260px;
-  --admin-topbar-height: 64px;
-  --admin-radius-sm: 8px;
-  --admin-radius: 10px;
-  --admin-radius-lg: 16px;
+  --admin-topbar-height: 72px;
+  --admin-radius-sm: 4px;
+  --admin-radius: 6px;
+  --admin-radius-lg: 8px;
   
-  /* Shadows */
+  /* Shadows (Ridotte come da specifiche) */
   --admin-shadow-sm: none;
-  --admin-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --admin-shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --admin-shadow: 0 1px 3px rgba(23, 47, 39, 0.05);
+  --admin-shadow-lg: 0 4px 12px rgba(23, 47, 39, 0.08);
 }
 
 /* Base App Layout */
@@ -142,6 +143,8 @@
 .admin-nav-item.active {
   background-color: var(--admin-primary-light);
   color: var(--admin-primary);
+  border-right: 3px solid var(--admin-primary);
+  border-radius: var(--admin-radius) 0 0 var(--admin-radius);
 }
 
 .admin-nav-item:focus-visible,
@@ -326,10 +329,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 0 20px;
+  height: 44px;
   border-radius: var(--admin-radius);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
+  font-family: inherit;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
   border: 1px solid transparent;
@@ -365,18 +370,24 @@
 }
 
 .admin-btn-sm {
-  padding: 6px 12px;
-  font-size: 0.75rem;
+  padding: 0 12px;
+  height: 32px;
+  font-size: 0.85rem;
 }
 
 .admin-btn-icon {
-  padding: 8px;
+  padding: 0;
+  width: 44px;
+}
+.admin-btn-icon.admin-btn-sm {
+  width: 32px;
 }
 
 /* Form Elements */
 .admin-input {
   width: 100%;
-  padding: 10px 12px;
+  height: 44px;
+  padding: 0 16px;
   border: 1px solid var(--admin-border);
   border-radius: var(--admin-radius);
   font-family: inherit;
@@ -384,6 +395,12 @@
   background-color: var(--admin-surface);
   color: var(--admin-text-main);
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea.admin-input {
+  height: auto;
+  padding: 12px 16px;
+  line-height: 1.5;
 }
 
 .admin-input:focus {
@@ -551,4 +568,13 @@
   .admin-booking-row > div:nth-child(4) { order: 4; text-align: left !important; margin-top: 8px; }
   .admin-modal > div:last-child { flex-direction: column-reverse; }
   .admin-modal > div:last-child .admin-btn { width: 100%; }
+}
+
+@media (max-width: 400px) {
+  .admin-modal {
+    padding: 16px;
+    width: calc(100% - 16px);
+  }
+  .admin-page-header { gap: 12px; }
+  .admin-btn { font-size: 0.85rem; padding: 0 16px; }
 }

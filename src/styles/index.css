@@ -2,16 +2,16 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
 
 :root {
-  /* Palette Pubblica */
-  --c-crema: #FDFBF7;
-  --c-crema-dark: #f0eadd;
-  --c-forest: #1A2421;
-  --c-forest-light: #2c3a35;
-  --c-terra: #A64B2A;
-  --c-terra-dark: #8c3e21;
-  --c-gold: #C29B57;
-  --c-text-muted: #5c6662;
-  --c-line: #e3dccd;
+  /* Palette Pubblica - Design System */
+  --c-crema: #F6F1E7;
+  --c-crema-chiaro: #FBF8F1;
+  --c-forest: #203D32;
+  --c-forest-dark: #172F27;
+  --c-terra: #A9563B;
+  --c-terra-dark: #8F452F;
+  --c-text-muted: #6E716A;
+  --c-line: #DDD5C7;
+  --c-white-warm: #FFFDF8;
   
   --c-green-ok: #22c55e;
   --c-red-err: #ef4444;
@@ -43,6 +43,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 .public-app *, .public-app *::before, .public-app *::after {
@@ -98,7 +100,7 @@
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: var(--c-terra);
   margin-bottom: 12px;
 }
 
@@ -148,7 +150,7 @@
 }
 
 .public-app .btn:focus-visible {
-  outline: 2px solid var(--c-gold);
+  outline: 2px solid var(--c-terra);
   outline-offset: 4px;
 }
 
@@ -225,7 +227,7 @@
 .public-app .form-label {
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--c-forest-light);
+  color: var(--c-forest-dark);
 }
 
 .public-app .form-input, 
@@ -307,7 +309,7 @@
   font-size: 0.6rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: var(--c-terra);
   margin-top: 2px;
 }
 
@@ -370,20 +372,24 @@
 .public-app .nav-panel {
   visibility: hidden;
   opacity: 0;
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: 84px;
   left: 0;
   right: 0;
+  bottom: 0;
   background-color: var(--c-crema);
-  border-bottom: 1px solid var(--c-line);
-  box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  gap: 16px;
+  padding: 32px 24px;
+  gap: 24px;
   z-index: 99;
   transform: translateY(-8px);
-  transition: opacity var(--trans), visibility var(--trans), transform var(--trans);
+  transition: all var(--trans);
+  overflow-y: auto;
+}
+
+.public-app .nav-panel.scrolled {
+  top: 70px;
 }
 
 .public-app .nav-panel.open {
@@ -393,11 +399,19 @@
 }
 
 .public-app .nav-panel a {
-  font-size: 1rem;
+  font-family: var(--font-serif);
+  font-size: 2rem;
   font-weight: 500;
   padding: 8px 0;
   color: var(--c-forest);
   transition: color var(--trans);
+}
+
+.public-app .nav-panel a.btn {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  margin-top: auto; /* Spinge il bottone in fondo se c'è spazio */
+  padding: 16px;
 }
 
 .public-app .nav-panel a:hover {
@@ -431,7 +445,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(26, 36, 33, 0.9) 0%, rgba(26, 36, 33, 0.6) 50%, rgba(26, 36, 33, 0.2) 100%);
+  background: linear-gradient(to right, rgba(32, 61, 50, 0.6) 0%, rgba(32, 61, 50, 0.3) 50%, transparent 100%);
 }
 
 .public-app .hero .container {
@@ -454,7 +468,7 @@
 
 .public-app .hero h1 em {
   font-style: italic;
-  color: var(--c-gold);
+  color: var(--c-terra);
 }
 
 .public-app .hero-lead {
@@ -480,7 +494,7 @@
 }
 
 .public-app .hero-stars {
-  color: var(--c-gold);
+  color: var(--c-terra);
 }
 
 .public-app .hero-sep {
@@ -519,7 +533,7 @@
   height: 48px;
   border-radius: 50%;
   background-color: rgba(194, 155, 87, 0.1);
-  color: var(--c-gold);
+  color: var(--c-terra);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -621,7 +635,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: var(--c-terra);
   margin-bottom: 8px;
 }
 
@@ -736,7 +750,7 @@
 .public-app .gallery-item {
   position: relative;
   overflow: hidden;
-  background-color: var(--c-forest-light);
+  background-color: var(--c-forest-dark);
   cursor: pointer;
 }
 
@@ -832,7 +846,7 @@
 }
 
 .public-app .rating-stars {
-  color: var(--c-gold);
+  color: var(--c-terra);
   margin: 8px 0;
 }
 
@@ -921,11 +935,11 @@
   width: 100%;
   height: 400px;
   border: 1px solid var(--c-line);
-  background-color: var(--c-crema-dark);
+  background-color: var(--c-crema-chiaro);
 }
 
 .public-app .cta-box {
-  background-color: var(--c-crema-dark);
+  background-color: var(--c-crema-chiaro);
   padding: 40px;
   margin-top: 32px;
   text-align: center;
@@ -1056,7 +1070,7 @@
   opacity: 0.4;
   cursor: not-allowed;
   border-color: var(--c-line);
-  background-color: var(--c-crema-dark);
+  background-color: var(--c-crema-chiaro);
 }
 
 .public-app .booking-summary {
@@ -1101,7 +1115,7 @@
 
 .public-app .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1.2fr 1fr 1.2fr;
   gap: 60px;
   padding-bottom: 60px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -1130,7 +1144,7 @@
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: var(--c-terra);
   margin-bottom: 24px;
 }
 
@@ -1149,7 +1163,7 @@
 
 .public-app .contact-item svg {
   margin-top: 2px;
-  color: var(--c-gold);
+  color: var(--c-terra);
 }
 
 .public-app .footer-bottom {
@@ -1201,7 +1215,7 @@
 }
 
 .public-app .mobile-bar-btn:hover {
-  background-color: var(--c-crema-dark);
+  background-color: var(--c-crema-chiaro);
 }
 
 .public-app .mobile-bar-btn:first-child:hover {
@@ -1211,9 +1225,9 @@
 /* ── HELPERS PUBBLICI ────────────────────────────────── */
 .public-app .text-sm { font-size: 0.85rem; }
 .public-app .text-muted { color: var(--c-text-muted); }
-.public-app .text-gold { color: var(--c-gold); }
+.public-app .text-gold { color: var(--c-terra); }
 .public-app .text-forest { color: var(--c-forest); }
-.public-app .text-forest-light { color: var(--c-forest-light); }
+.public-app .text-forest-light { color: var(--c-forest-dark); }
 .public-app .text-terra { color: var(--c-terra); }
 .public-app .text-white { color: #ffffff; }
 .public-app .text-white-70 { color: rgba(255, 255, 255, 0.7); }
@@ -1225,7 +1239,7 @@
 
 .public-app .bg-forest { background-color: var(--c-forest); }
 .public-app .bg-crema { background-color: var(--c-crema); }
-.public-app .bg-crema-dark { background-color: var(--c-crema-dark); }
+.public-app .bg-crema-dark { background-color: var(--c-crema-chiaro); }
 .public-app .bg-terra { background-color: var(--c-terra); }
 
 .public-app .fw-bold { font-weight: bold; }
@@ -1327,41 +1341,57 @@
 .public-app .gallery-grid-2cols { grid-template-columns: 1fr 1fr; gap: 32px; grid-auto-rows: auto; }
 .public-app .offset-y { transform: translateY(60px); }
 
-/* ── COMPONENTI MENU PUBLIC ──────────────────────────── */
-.public-app .menu-header { padding: 100px 20px 30px; }
-.public-app .sticky-nav { position: sticky; top: 60px; z-index: 100; background-color: rgba(244, 241, 236, 0.95); backdrop-filter: blur(8px); padding: 16px 20px; border-bottom: 1px solid rgba(26,36,33,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-.public-app .category-scroll-container { display: flex; gap: 24px; overflow-x: auto; scrollbar-width: none; ms-overflow-style: none; }
-.public-app .category-scroll-container::-webkit-scrollbar { display: none; }
-.public-app .category-btn { background: none; border: none; font-family: var(--font-sans); font-size: 1.1rem; font-weight: 400; color: var(--c-forest-light); text-transform: capitalize; cursor: pointer; position: relative; padding: 4px 0; white-space: nowrap; transition: all 0.3s ease; }
-.public-app .category-btn.active { font-weight: 600; color: var(--c-forest); }
-.public-app .category-btn-indicator { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; background-color: var(--c-terra); }
-.public-app .menu-fisso-card { padding: 32px; border-radius: 8px; border-left: 4px solid var(--c-terra); box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
-.public-app .price-badge-lg { font-family: var(--font-sans); font-size: 1.4rem; }
-.public-app .menu-category-section { scroll-margin-top: 150px; }
-.public-app .category-title { font-family: var(--font-serif); font-size: 2.5rem; color: var(--c-forest); text-transform: capitalize; border-bottom: 2px solid var(--c-crema-dark); padding-bottom: 16px; margin-bottom: 32px; margin-top: 0; }
-.public-app .dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-.public-app .dish-card-styled { opacity: 1; background-color: #ffffff; border-radius: 16px; padding: 28px; box-shadow: 0 8px 30px rgba(26,36,33,0.06); border: 1px solid rgba(26,36,33,0.04); display: flex; flex-direction: column; position: relative; overflow: hidden; }
-.public-app .dish-card-styled.sold-out { opacity: 0.7; }
-.public-app .dish-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 4px; background-color: var(--c-terra); opacity: 0.8; }
-.public-app .dish-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
-.public-app .dish-title { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 600; color: var(--c-forest); margin: 0; line-height: 1.2; }
-.public-app .dish-price-badge { font-family: var(--font-sans); font-size: 1.25rem; color: var(--c-terra); font-weight: 700; white-space: nowrap; background-color: var(--c-crema); padding: 6px 14px; border-radius: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-.public-app .sold-out-badge { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-terra); background-color: rgba(217, 72, 15, 0.1); padding: 6px 12px; border-radius: 4px; display: inline-block; }
-.public-app .menu-footer { margin-top: 80px; padding-top: 40px; border-top: 1px solid rgba(26,36,33,0.1); }
+.public-app .editorial-gallery { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; align-items: start; }
+.public-app .editorial-img-wrap { overflow: hidden; background: var(--c-crema-chiaro); }
+.public-app .editorial-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+.public-app .editorial-img-wrap:hover img { transform: scale(1.04); }
+.public-app .editorial-img-0 { grid-column: span 7; height: 550px; }
+.public-app .editorial-img-1 { grid-column: span 5; height: 450px; margin-top: 100px; }
+.public-app .editorial-img-2 { grid-column: span 5; height: 650px; margin-top: -60px; }
+.public-app .editorial-img-3 { grid-column: span 7; height: 500px; }
 
-/* ── COMPONENTI CHI SIAMO ──────────────────────────── */
+/* ── COMPONENTI MENU PUBLIC (REDESIGN EDITORIALE) ──────────────────────────── */
+.public-app .menu-layout { display: grid; grid-template-columns: 350px 1fr; gap: 80px; align-items: start; }
+.public-app .menu-sidebar { position: relative; }
+.public-app .sticky-inner { position: sticky; top: 120px; }
+.public-app .menu-sidebar-img { width: 100%; height: 400px; object-fit: cover; }
+.public-app .menu-categories-scroll { display: flex; gap: 24px; overflow-x: auto; scrollbar-width: none; padding-bottom: 8px; border-bottom: 1px solid var(--c-line); }
+.public-app .menu-categories-scroll::-webkit-scrollbar { display: none; }
+.public-app .menu-cat-btn { background: none; border: none; font-family: var(--font-sans); font-size: 1rem; color: var(--c-text-muted); text-transform: capitalize; padding: 0 0 12px 0; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: color 0.3s; position: relative; }
+.public-app .menu-cat-btn.active { color: var(--c-terra); font-weight: 600; }
+.public-app .menu-cat-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--c-terra); }
+
+.public-app .menu-fisso-editorial { background-color: var(--c-crema-chiaro); border-left: 3px solid var(--c-terra); padding: 24px 32px; }
+
+.public-app .menu-category-section-editorial { scroll-margin-top: 150px; }
+.public-app .category-title-editorial { font-family: var(--font-serif); font-size: 2rem; color: var(--c-forest); text-transform: capitalize; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--c-line); }
+
+.public-app .dish-editorial-list { display: flex; flex-direction: column; gap: 32px; }
+.public-app .dish-editorial-row { display: flex; flex-direction: column; gap: 8px; }
+.public-app .dish-editorial-row.sold-out { opacity: 0.5; }
+.public-app .dish-editorial-header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.public-app .dish-editorial-name { font-family: var(--font-serif); font-size: 1.4rem; color: var(--c-forest); margin: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.public-app .dish-editorial-price { font-family: var(--font-sans); font-size: 1.2rem; color: var(--c-forest); text-align: right; white-space: nowrap; flex-shrink: 0; }
+.public-app .dish-editorial-desc { font-family: var(--font-sans); font-size: 1rem; color: var(--c-text-muted); margin: 0; max-width: 85%; line-height: 1.6; }
+.public-app .sold-out-text { font-family: var(--font-sans); font-size: 0.7rem; color: var(--c-terra); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; border: 1px solid var(--c-terra); padding: 2px 6px; border-radius: 2px; }
+
+/* ── COMPONENTI CHI SIAMO / GALLERIA ──────────────────────────── */
 .public-app .grid-4cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 48px; }
-.public-app .gallery-grid-3cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; grid-auto-rows: 300px; }
-.public-app .gallery-item-btn { border: none; padding: 0; background: none; cursor: pointer; position: relative; overflow: hidden; }
-.public-app .gallery-img-full { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-.public-app .gallery-item-btn:hover .gallery-img-full { transform: scale(1.03); }
-.public-app .lightbox-overlay { position: fixed; inset: 0; z-index: 9999; background-color: rgba(26,36,33,0.98); display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease; }
-.public-app .lightbox-close { position: absolute; top: 24px; right: 24px; background: none; border: none; color: #fff; cursor: pointer; padding: 12px; z-index: 10; }
-.public-app .lightbox-prev { position: absolute; left: 24px; background: none; border: none; color: #fff; cursor: pointer; padding: 24px; z-index: 10; }
-.public-app .lightbox-next { position: absolute; right: 24px; background: none; border: none; color: #fff; cursor: pointer; padding: 24px; z-index: 10; }
-.public-app .lightbox-content { position: relative; max-width: 85vw; max-height: 85vh; }
-.public-app .lightbox-img { max-width: 100%; max-height: 85vh; object-fit: contain; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-.public-app .lightbox-caption { position: absolute; bottom: -40px; left: 0; right: 0; text-align: center; color: #fff; font-size: 1rem; opacity: 0.7; }
+
+.public-app .masonry-gallery { column-count: 3; column-gap: 40px; width: 100%; }
+.public-app .masonry-item-btn { display: block; width: 100%; margin-bottom: 40px; break-inside: avoid; background: none; border: none; padding: 0; cursor: pointer; overflow: hidden; }
+.public-app .masonry-img { width: 100%; height: auto; display: block; transition: transform 0.8s ease; }
+.public-app .masonry-item-btn:hover .masonry-img { transform: scale(1.03); }
+
+.public-app .lightbox-overlay-premium { position: fixed; inset: 0; z-index: 99999; background-color: rgba(23, 47, 39, 0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease; padding: 40px; }
+.public-app .lightbox-close-premium { position: absolute; top: 40px; right: 40px; background: none; border: none; color: #fff; cursor: pointer; padding: 12px; z-index: 10; opacity: 0.7; transition: opacity 0.3s; }
+.public-app .lightbox-close-premium:hover { opacity: 1; }
+.public-app .lightbox-prev-premium { position: absolute; left: 40px; background: none; border: none; color: #fff; cursor: pointer; padding: 24px; z-index: 10; opacity: 0.5; transition: opacity 0.3s; }
+.public-app .lightbox-prev-premium:hover { opacity: 1; }
+.public-app .lightbox-next-premium { position: absolute; right: 40px; background: none; border: none; color: #fff; cursor: pointer; padding: 24px; z-index: 10; opacity: 0.5; transition: opacity 0.3s; }
+.public-app .lightbox-next-premium:hover { opacity: 1; }
+.public-app .lightbox-content-premium { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.public-app .lightbox-img-premium { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
 
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -1371,6 +1401,9 @@
   .public-app .footer-grid { grid-template-columns: 1fr 1fr; }
   .public-app .footer-grid > *:first-child { grid-column: span 2; }
   .public-app .reviews-grid { grid-template-columns: 1fr 1fr; }
+  .public-app .menu-layout { grid-template-columns: 280px 1fr; gap: 40px; }
+  .public-app .masonry-gallery { column-count: 2; column-gap: 24px; }
+  .public-app .masonry-item-btn { margin-bottom: 24px; }
 }
 
 @media (max-width: 768px) {
@@ -1396,6 +1429,20 @@
   .public-app .footer-grid { grid-template-columns: 1fr; gap: 40px; }
   .public-app .footer-grid > *:first-child { grid-column: span 1; }
   
+  .public-app .editorial-gallery { grid-template-columns: 1fr; gap: 16px; }
+  .public-app .editorial-img-wrap { grid-column: span 1 !important; margin-top: 0 !important; height: 350px !important; }
+  
+  .public-app .menu-layout { grid-template-columns: 1fr; gap: 40px; }
+  .public-app .sticky-inner { position: static; }
+  .public-app .menu-sidebar-img { height: 300px; }
+  .public-app .dish-editorial-desc { max-width: 100%; }
+  
+  .public-app .masonry-gallery { column-count: 1; }
+  .public-app .lightbox-overlay-premium { padding: 16px; }
+  .public-app .lightbox-close-premium { top: 16px; right: 16px; }
+  .public-app .lightbox-prev-premium { left: 0; padding: 16px; }
+  .public-app .lightbox-next-premium { right: 0; padding: 16px; }
+
   .public-app .mobile-bar { display: block; }
   .public-app { padding-bottom: 60px; }
   

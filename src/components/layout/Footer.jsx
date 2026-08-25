@@ -52,8 +52,24 @@ export default function Footer() {
           </div>
 
           <div className="footer-col">
-            <h3 className="footer-title">Seguici</h3>
-            <div className="social-links">
+            <h3 className="footer-title">Esplora</h3>
+            <div className="footer-contact">
+              <Link to="/chi-siamo" className="contact-item" style={{textDecoration: 'none'}}>Chi siamo</Link>
+              <Link to="/menu" className="contact-item" style={{textDecoration: 'none'}}>Menù</Link>
+              <Link to="/chi-siamo" className="contact-item" style={{textDecoration: 'none'}}>Galleria</Link>
+              <Link to="/contatti" className="contact-item" style={{textDecoration: 'none'}}>Dove siamo</Link>
+            </div>
+          </div>
+
+          <div className="footer-col">
+            <h3 className="footer-title">Prenotazioni</h3>
+            <p className="footer-text" style={{marginTop: 0, marginBottom: '16px', fontSize: '0.85rem'}}>
+              Assicurati il tuo tavolo per pranzo o cena.
+            </p>
+            <Link to="/prenota" className="btn btn-primary btn-sm" style={{display: 'inline-block'}}>
+              Prenota Ora
+            </Link>
+            <div className="social-links mt-4">
               {settings.social?.instagram && (
                 <a href={settings.social.instagram} target="_blank" rel="noopener noreferrer" className="social-link" title="Instagram">
                   <InstagramIcon />

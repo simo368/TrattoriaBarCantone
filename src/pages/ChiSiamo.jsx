@@ -114,40 +114,30 @@ export default function ChiSiamo() {
         </div>
       </section>
 
-      {/* 5. GALLERIA FOTOGRAFICA */}
-      <section className="section py-xl bg-crema">
+      {/* 5. GALLERIA FOTOGRAFICA EDITORIALE */}
+      <section className="section py-xl bg-crema-chiaro" id="galleria">
         <div className="container">
           <div className="center mb-xl">
-            <h2 className="title-xl">La Nostra Atmosfera</h2>
+            <h2 className="title-xl">L'Atmosfera.</h2>
           </div>
           
-          <div className="gallery-grid-3cols">
-            {gallery.map((img, i) => {
-              const isLarge = i === 0; 
-              return (
-                <button 
-                  key={i} 
-                  onClick={() => { setCurrentImg(i); setLightboxOpen(true); }}
-                  aria-label={`Ingrandisci immagine: ${img.label}`}
-                  className="gallery-item-btn gallery-item"
-                  style={{ 
-                    gridColumn: isLarge ? '1 / -1' : 'auto',
-                    gridRow: isLarge ? 'span 2' : 'span 1'
-                  }}
-                >
-                  <img 
-                    src={img.src} 
-                    alt={img.label}
-                    loading="lazy"
-                    className="gallery-img-full"
-                    onError={(e) => { e.target.src = './img/hero.jpg'; }}
-                  />
-                  <div className="gallery-overlay">
-                    {img.label}
-                  </div>
-                </button>
-              );
-            })}
+          <div className="masonry-gallery">
+            {gallery.map((img, i) => (
+              <button 
+                key={i} 
+                onClick={() => { setCurrentImg(i); setLightboxOpen(true); }}
+                aria-label={`Ingrandisci immagine: ${img.label}`}
+                className="masonry-item-btn"
+              >
+                <img 
+                  src={img.src} 
+                  alt={img.label}
+                  loading="lazy"
+                  className="masonry-img"
+                  onError={(e) => { e.target.src = './img/hero.jpg'; }}
+                />
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -170,48 +160,45 @@ export default function ChiSiamo() {
           role="dialog"
           aria-modal="true"
           aria-label="Galleria immagini"
-          className="lightbox-overlay"
+          className="lightbox-overlay-premium"
           style={{ opacity: lightboxOpen ? 1 : 0 }}
           onClick={() => setLightboxOpen(false)}
         >
           {/* Chiusura */}
           <button 
             aria-label="Chiudi galleria"
-            className="lightbox-close"
+            className="lightbox-close-premium"
             onClick={() => setLightboxOpen(false)}
             autoFocus
           >
-            <X size={36} />
+            <X size={40} strokeWidth={1.5} />
           </button>
 
           {/* Navigazione */}
           <button 
             aria-label="Immagine precedente"
-            className="lightbox-prev"
+            className="lightbox-prev-premium"
             onClick={(e) => { e.stopPropagation(); setCurrentImg((i) => (i - 1 + gallery.length) % gallery.length); }}
           >
-            <ChevronLeft size={48} />
+            <ChevronLeft size={48} strokeWidth={1} />
           </button>
 
           <button 
             aria-label="Immagine successiva"
-            className="lightbox-next"
+            className="lightbox-next-premium"
             onClick={(e) => { e.stopPropagation(); setCurrentImg((i) => (i + 1) % gallery.length); }}
           >
-            <ChevronRight size={48} />
+            <ChevronRight size={48} strokeWidth={1} />
           </button>
 
           {/* Immagine */}
-          <div onClick={(e) => e.stopPropagation()} className="lightbox-content">
+          <div onClick={(e) => e.stopPropagation()} className="lightbox-content-premium">
             <img 
               src={gallery[currentImg].src} 
               alt={gallery[currentImg].label} 
-              className="lightbox-img"
+              className="lightbox-img-premium"
               onError={(e) => { e.target.src = './img/hero.jpg'; }}
             />
-            <div className="lightbox-caption">
-              {gallery[currentImg].label} — {currentImg + 1} / {gallery.length}
-            </div>
           </div>
         </div>
       )}

@@ -39,11 +39,11 @@ export default function Contatti() {
       {/* 1. HEADER EDITORIALE */}
       <section className="section" style={{ padding: '160px 0 80px', backgroundColor: 'var(--c-crema)' }}>
         <div className="container center">
-          <span className="eyebrow" style={{ color: 'var(--c-gold)', marginBottom: '24px' }}>Contatti</span>
+          <span className="eyebrow" style={{ color: 'var(--c-terra)', marginBottom: '24px' }}>Contatti</span>
           <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 5.5rem)', lineHeight: 1, marginBottom: '32px' }}>
             Dove trovarci.
           </h1>
-          <p className="section-lead" style={{ fontSize: '1.4rem', maxWidth: '700px', margin: '0 auto', color: 'var(--c-forest-light)' }}>
+          <p className="section-lead" style={{ fontSize: '1.4rem', maxWidth: '700px', margin: '0 auto', color: 'var(--c-forest-dark)' }}>
             Siamo aperti per regalarti un momento di puro relax e gusto. 
             Vieni a trovarci, oppure contattaci per qualsiasi richiesta.
           </p>
@@ -66,7 +66,7 @@ export default function Contatti() {
                   <MapPin size={24} style={{ color: 'var(--c-terra)', flexShrink: 0, marginTop: '4px' }} />
                   <div>
                     <strong style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Indirizzo</strong>
-                    <a href={settings.maps} target="_blank" rel="noreferrer" style={{ fontSize: '1.1rem', color: 'var(--c-forest-light)', lineHeight: '1.6', textDecoration: 'underline', textUnderlineOffset: '4px' }}>
+                    <a href={settings.maps} target="_blank" rel="noreferrer" style={{ fontSize: '1.1rem', color: 'var(--c-forest-dark)', lineHeight: '1.6', textDecoration: 'underline', textUnderlineOffset: '4px' }}>
                       {address.street}<br/>
                       {address.zip} {address.city} ({address.province})
                     </a>
@@ -80,7 +80,7 @@ export default function Contatti() {
                   <Phone size={24} style={{ color: 'var(--c-terra)', flexShrink: 0, marginTop: '4px' }} />
                   <div>
                     <strong style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Telefono</strong>
-                    <a href={settings.phoneLink || `tel:${settings.phone}`} style={{ fontSize: '1.1rem', color: 'var(--c-forest-light)' }}>
+                    <a href={settings.phoneLink || `tel:${settings.phone}`} style={{ fontSize: '1.1rem', color: 'var(--c-forest-dark)' }}>
                       {settings.phone}
                     </a>
                   </div>
@@ -93,7 +93,7 @@ export default function Contatti() {
                   <Mail size={24} style={{ color: 'var(--c-terra)', flexShrink: 0, marginTop: '4px' }} />
                   <div>
                     <strong style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Email</strong>
-                    <a href={`mailto:${settings.email}`} style={{ fontSize: '1.1rem', color: 'var(--c-forest-light)' }}>
+                    <a href={`mailto:${settings.email}`} style={{ fontSize: '1.1rem', color: 'var(--c-forest-dark)' }}>
                       {settings.email}
                     </a>
                   </div>
@@ -128,7 +128,7 @@ export default function Contatti() {
           </div>
 
           {/* Colonna Destra: Orari Dinamici */}
-          <div style={{ backgroundColor: 'var(--c-crema-dark)', padding: '48px', borderRadius: '4px' }}>
+          <div style={{ backgroundColor: 'var(--c-crema-chiaro)', padding: '48px', borderRadius: '4px' }}>
             <h3 style={{ fontSize: '2rem', marginBottom: '32px', fontFamily: 'var(--font-serif)', color: 'var(--c-forest)' }}>Orari di Apertura</h3>
             
             {hours && hours.schedule ? (

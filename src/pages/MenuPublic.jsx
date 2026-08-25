@@ -20,8 +20,7 @@ export default function MenuPublic() {
     setActiveCategory(cat);
     const element = categoryRefs.current[cat];
     if (element) {
-      // Calcola l'offset per l'header + sticky nav (circa 130px)
-      const headerOffset = 130; 
+      const headerOffset = 150; 
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.scrollY - headerOffset;
       
@@ -32,13 +31,11 @@ export default function MenuPublic() {
     }
   };
 
-  // IntersectionObserver per aggiornare la categoria attiva durante lo scroll
+  // IntersectionObserver per aggiornare la categoria attiva
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
-      // Trova le entry visibili
       const visibleEntries = entries.filter(entry => entry.isIntersecting);
       if (visibleEntries.length > 0) {
-        // Prendi quella più in alto
         const topEntry = visibleEntries.reduce((prev, current) => 
           (prev.boundingClientRect.top < current.boundingClientRect.top) ? prev : current
         );
@@ -47,7 +44,7 @@ export default function MenuPublic() {
         }
       }
     }, {
-      rootMargin: '-130px 0px -70% 0px', // Trigger quando l'elemento è nella parte alta
+      rootMargin: '-150px 0px -70% 0px',
       threshold: 0
     });
 
@@ -58,7 +55,7 @@ export default function MenuPublic() {
     return () => observer.disconnect();
   }, [loading, menu]);
 
-  // Imposta categoria iniziale se vuota
+  // Imposta categoria iniziale
   useEffect(() => {
     if (!activeCategory && categories.length > 0) {
       setActiveCategory(categories[0]);
@@ -78,135 +75,121 @@ export default function MenuPublic() {
   }
 
   return (
-    <main className="menu-page bg-crema min-h-screen pb-100">
-      
-      {/* Intestazione Semplificata */}
-      <div className="menu-header bg-crema-dark center px-3">
-        <h1 className="title-xxl text-forest m-0">
-          Il Menù
-        </h1>
-      </div>
-
-      {/* Sticky Navigation */}
-      <div className="sticky-nav">
-        <div className="container max-w-md mx-auto">
-          <div className="category-scroll-container">
-            {categories.map((cat) => (
-              <button 
-                key={cat} 
-                onClick={() => scrollToCategory(cat)}
-                className={`category-btn ${activeCategory === cat ? 'active' : ''}`}
-              >
-                {cat}
-                {activeCategory === cat && <span className="category-btn-indicator" />}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="container max-w-md mx-auto py-10 px-3">
-        
-        {/* Menù Fisso */}
-        <div className="menu-fisso-card bg-crema-dark mb-xl">
-          <div className="flex-between items-baseline mb-3">
-            <h3 className="title-md text-forest m-0">
-              Menù Fisso Feriale
-            </h3>
-            <span className="price-badge-lg text-terra fw-600">
-              €{Number(prezzoMenu).toFixed(2)}
-            </span>
-          </div>
-          <p className="text-muted m-0 lh-base font-sans">
-            Disponibile a pranzo dal lunedì al venerdì. Include primo, secondo con contorno, acqua, quarto di vino e caffè.
-          </p>
-        </div>
-
-        {/* Categories and Dishes */}
-        {loading ? (
-          <div className="center p-10">
-            <span className="text-lg text-forest-light font-sans">
-              Caricamento del menù...
-            </span>
-          </div>
-        ) : !categories.some(cat => (groupedMenu[cat] || []).length > 0) ? (
-          <div className="center p-10 bg-crema-dark" style={{ borderRadius: '16px' }}>
-            <span className="text-lg text-forest font-sans">
-              Il menù è in fase di aggiornamento. Torna a trovarci presto!
-            </span>
-          </div>
-        ) : (
-          <div className="flex-col gap-xl">
-            {categories.map((cat) => {
-              const dishes = groupedMenu[cat] || [];
-              
-              // Nascondi categorie vuote
-              if (dishes.length === 0) return null;
-
-              return (
-                <section 
-                  key={cat} 
-                  ref={el => categoryRefs.current[cat] = el}
-                  data-category={cat}
-                  className="menu-category-section"
-                >
-                  <h2 className="category-title">
-                    {cat}
-                  </h2>
-                  
-                  <div className="dish-grid">
-                    {dishes.map((dish, i) => (
-                      <div 
-                        key={dish.id || i} 
-                        className={`dish-card-styled ${dish.soldOut ? 'sold-out' : ''}`}
-                      >
-                        {/* A subtle colored line on top for extra beauty */}
-                        <div className="dish-card-accent" />
-
-                        <div className="dish-card-header">
-                          <h4 className="dish-title">
-                            {dish.name}
-                          </h4>
-                          
-                          {dish.price && (
-                            <span className="dish-price-badge">
-                              € {Number(dish.price).toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {(dish.desc || dish.description) && (
-                          <p className="dish-desc font-sans m-0 lh-base flex-grow">
-                            {dish.desc || dish.description}
-                          </p>
-                        )}
-
-                        {dish.soldOut && (
-                          <div className="mt-4">
-                            <span className="sold-out-badge">
-                              Esaurito
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        )}
-        
-        <div className="menu-footer text-center">
-          <p className="text-muted font-sans text-sm italic mb-4">
-            Coperto e pane €{Number(prezzoCoperto).toFixed(2)}.<br/>
-            In caso di allergie o intolleranze alimentari, vi invitiamo a informare il nostro personale.
-          </p>
+    <main className="menu-page-new bg-crema min-h-screen">
+      <div className="container py-xl">
+        <div className="menu-layout">
           
-          {/* CTA Prenota posizionata in fondo per invogliare dopo la lettura */}
-          <Link to="/prenota" className="btn btn-primary btn-lg">
-            Prenota un tavolo
-          </Link>
+          {/* SINISTRA: Sticky Sidebar */}
+          <div className="menu-sidebar">
+            <div className="sticky-inner">
+              <h1 className="title-xl mb-4">Il nostro menù.</h1>
+              <p className="text-lead text-forest-dark mb-5 font-sans">
+                {settings?.description || "Ricette tramandate di generazione in generazione. Pasta fresca tirata a mano ogni mattina."}
+              </p>
+              <img 
+                src="./img/hero.jpg" 
+                alt="I nostri piatti" 
+                loading="lazy" 
+                className="menu-sidebar-img" 
+                onError={(e) => e.target.src='./img/hero.jpg'} 
+              />
+            </div>
+          </div>
+
+          {/* DESTRA: Contenuto */}
+          <div className="menu-content">
+            
+            {/* Categorie orizzontali nativo */}
+            <div className="menu-categories-scroll mb-5">
+              {categories.map((cat) => {
+                const hasDishes = (groupedMenu[cat] || []).length > 0;
+                if (!hasDishes) return null;
+                
+                return (
+                  <button 
+                    key={cat} 
+                    onClick={() => scrollToCategory(cat)}
+                    className={`menu-cat-btn ${activeCategory === cat ? 'active' : ''}`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Menu Fisso */}
+            <div className="menu-fisso-editorial mb-xl">
+              <div className="flex-between items-baseline mb-2">
+                <h3 className="title-md m-0">Menù Fisso Feriale</h3>
+                <span className="font-sans fw-600 text-lg">€ {Number(prezzoMenu).toFixed(2)}</span>
+              </div>
+              <p className="text-muted m-0 font-sans">
+                Primo, secondo con contorno, acqua, quarto di vino e caffè. Servito a pranzo.
+              </p>
+            </div>
+
+            {/* Piatti */}
+            {loading ? (
+              <div className="center p-10 text-muted font-sans text-lg">
+                Caricamento del menù...
+              </div>
+            ) : !categories.some(cat => (groupedMenu[cat] || []).length > 0) ? (
+              <div className="center p-10 text-forest font-sans text-lg">
+                Il menù è in fase di aggiornamento.
+              </div>
+            ) : (
+              <div className="menu-list flex-col gap-xl">
+                {categories.map((cat) => {
+                  const dishes = groupedMenu[cat] || [];
+                  if (dishes.length === 0) return null;
+
+                  return (
+                    <section 
+                      key={cat} 
+                      ref={el => categoryRefs.current[cat] = el}
+                      data-category={cat}
+                      className="menu-category-section-editorial"
+                    >
+                      <h2 className="category-title-editorial">{cat}</h2>
+                      
+                      <div className="dish-editorial-list">
+                        {dishes.map((dish, i) => (
+                          <div key={dish.id || i} className={`dish-editorial-row ${dish.soldOut ? 'sold-out' : ''}`}>
+                            <div className="dish-editorial-header">
+                              <h4 className="dish-editorial-name">
+                                {dish.name} 
+                                {dish.soldOut && <span className="sold-out-text">ESAURITO</span>}
+                              </h4>
+                              {dish.price && (
+                                <span className="dish-editorial-price">€ {Number(dish.price).toFixed(2)}</span>
+                              )}
+                            </div>
+                            
+                            {(dish.desc || dish.description) && (
+                              <p className="dish-editorial-desc">{dish.desc || dish.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+            
+            {/* CTA e Info finali */}
+            <div className="menu-footer-editorial center mt-xl pt-5 border-t">
+              <p className="text-muted font-sans text-sm italic mb-5">
+                Coperto e pane €{Number(prezzoCoperto).toFixed(2)}.<br/>
+                In caso di allergie o intolleranze alimentari, vi invitiamo a informare il nostro personale.
+              </p>
+              
+              <Link to="/prenota" className="btn btn-primary btn-xl">
+                Prenota un tavolo
+              </Link>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>

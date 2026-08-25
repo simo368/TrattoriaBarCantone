@@ -31,15 +31,18 @@ export default function Home() {
           <div className="hero-copy">
             <div className="eyebrow">{settings.address?.city} · Dal 1968</div>
             <h1 className="hero-title">
-              Autentica. <br/>
-              <em>Emiliana.</em>
+              Trattoria <br/>
+              <em>Bar Cantone.</em>
             </h1>
             <p className="hero-lead mt-4">
-              Pasta fresca tirata a mano e il calore di casa.
+              {settings.description || "Pasta fresca tirata a mano e il calore di casa, dal 1968."}
             </p>
-            <div className="hero-actions mt-4">
+            <div className="hero-actions mt-4 flex-gap-1">
               <Link to="/prenota" className="btn btn-primary btn-lg">
-                Prenota il tuo tavolo
+                Prenota un tavolo
+              </Link>
+              <Link to="/menu" className="btn btn-ghost btn-lg">
+                Scopri il menù
               </Link>
             </div>
             
@@ -87,17 +90,16 @@ export default function Home() {
         <div className="container split gap-lg">
           <div className="img-frame order-1">
             <img 
-              src="./img/hero.jpg" 
-              alt="Pasta fresca" 
+              src={galleryPhotos.length > 1 ? galleryPhotos[1].url : "./img/hero.jpg"} 
+              alt="Atmosfera e dettagli" 
               loading="lazy" 
               className="img-tall no-radius"
             />
           </div>
           <div className="about-copy order-0 pr-5">
-            <h2 className="title-lg mb-4">Come una volta.</h2>
-            <p className="text-lead text-forest-light">
-              La nostra cucina è un atto d'amore per il territorio. 
-              Sfoglia ruvida, sughi lenti e il sorriso di chi ti aspetta a casa.
+            <h2 className="title-lg mb-4">La nostra storia.</h2>
+            <p className="text-lead text-forest-dark">
+              {settings.site?.metaDescription || settings.description || "La nostra cucina è un atto d'amore per il territorio. Sfoglia ruvida, sughi lenti e il sorriso di chi ti aspetta a casa."}
             </p>
             <Link to="/chi-siamo" className="btn btn-outline mt-5 btn-lg">
               Scopri la trattoria
@@ -148,21 +150,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. GALLERIA IMMAGINI (Masonry / Staggered) */}
-      <section className="section py-xl">
+      <section className="section py-xl bg-crema-chiaro">
         <div className="container">
-          <div className="gallery-grid gallery-grid-2cols">
+          <div className="center mb-5">
+            <h2 className="title-xl">L'Atmosfera.</h2>
+          </div>
+          <div className="editorial-gallery">
             {galleryPhotos.length > 0 ? (
               galleryPhotos.map((photo, index) => (
-                <div key={photo.id} className={index % 2 !== 0 ? 'offset-y' : ''}>
-                  <img src={photo.url} alt={photo.title || `Foto`} loading="lazy" className="gallery-img-tall" />
+                <div key={photo.id} className={`editorial-img-wrap editorial-img-${index}`}>
+                  <img src={photo.url} alt={photo.title || `Foto`} loading="lazy" />
                 </div>
               ))
             ) : (
               // Fallback Fotografico
               <>
-                <div><img src="./img/hero.jpg" alt="Interni" loading="lazy" className="gallery-img-tall" /></div>
-                <div className="offset-y"><img src="./img/hero.jpg" alt="Dettagli" loading="lazy" className="gallery-img-tall" /></div>
+                <div className="editorial-img-wrap editorial-img-0"><img src="./img/hero.jpg" alt="Interni" loading="lazy" /></div>
+                <div className="editorial-img-wrap editorial-img-1"><img src="./img/hero.jpg" alt="Dettagli" loading="lazy" /></div>
+                <div className="editorial-img-wrap editorial-img-2"><img src="./img/hero.jpg" alt="Piatti" loading="lazy" /></div>
+                <div className="editorial-img-wrap editorial-img-3"><img src="./img/hero.jpg" alt="Atmosfera" loading="lazy" /></div>
               </>
             )}
           </div>
@@ -173,10 +179,10 @@ export default function Home() {
       <section className="section bg-terra text-white center py-xxl">
         <div className="container">
           <h2 className="title-mega text-white mb-5">
-            Il tavolo <br/><em>è pronto.</em>
+            Prenota il tuo tavolo
           </h2>
           <Link to="/prenota" className="btn btn-ghost btn-xl border-2">
-            Prenota Ora
+            Prenota un tavolo
           </Link>
         </div>
       </section>

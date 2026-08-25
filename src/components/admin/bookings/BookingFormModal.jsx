@@ -85,12 +85,12 @@ export default function BookingFormModal({ isOpen, onClose, onSave, initialData,
         
         <div className="admin-form-grid">
           <div className="admin-form-field">
-            <label>Data *</label>
-            <input type="date" className="admin-input" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value, time: ''})} disabled={submitting} />
+            <label htmlFor="admin-booking-date">Data *</label>
+            <input type="date" id="admin-booking-date" className="admin-input" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value, time: ''})} disabled={submitting} />
           </div>
           <div className="admin-form-field">
-            <label>Coperti *</label>
-            <input type="number" min="1" max="30" className="admin-input" required value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})} disabled={submitting} />
+            <label htmlFor="admin-booking-guests">Coperti *</label>
+            <input type="number" id="admin-booking-guests" min="1" max="30" className="admin-input" required value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})} disabled={submitting} />
           </div>
         </div>
 
@@ -124,24 +124,24 @@ export default function BookingFormModal({ isOpen, onClose, onSave, initialData,
         </div>
 
         <div className="admin-form-field">
-          <label>Nome Cliente *</label>
-          <input className="admin-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={submitting} />
+          <label htmlFor="admin-booking-name">Nome Cliente *</label>
+          <input type="text" id="admin-booking-name" className="admin-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} disabled={submitting} />
         </div>
 
         <div className="admin-form-grid">
           <div className="admin-form-field">
-            <label>Telefono *</label>
-            <input type="tel" className="admin-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} disabled={submitting} />
+            <label htmlFor="admin-booking-phone">Telefono *</label>
+            <input type="tel" id="admin-booking-phone" className="admin-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} disabled={submitting} />
           </div>
           <div className="admin-form-field">
-            <label>Email</label>
-            <input type="email" className="admin-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} disabled={submitting} />
+            <label htmlFor="admin-booking-email">Email</label>
+            <input type="email" id="admin-booking-email" className="admin-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} disabled={submitting} />
           </div>
         </div>
 
         <div className="admin-form-field">
-          <label>Note</label>
-          <textarea className="admin-input" rows="2" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} disabled={submitting}></textarea>
+          <label htmlFor="admin-booking-notes">Note</label>
+          <textarea id="admin-booking-notes" className="admin-input" rows="2" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} disabled={submitting}></textarea>
         </div>
 
       </form>

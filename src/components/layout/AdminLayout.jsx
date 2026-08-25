@@ -30,7 +30,7 @@ function NavLinks({ location, onNavigate, role }) {
     <nav className="admin-nav">
       <div className="admin-nav-section-title">PANORAMICA</div>
       <Link to="/admin" className={`admin-nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={onNavigate}>
-        <LayoutDashboard size={18} /> Dashboard
+        <LayoutDashboard size={18} /> Riepilogo
       </Link>
       
       <div className="admin-nav-section-title">PRENOTAZIONI</div>

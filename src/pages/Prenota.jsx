@@ -160,10 +160,10 @@ export default function Prenota() {
             {step === 1 && (
               <div className="fade-in">
                 <div className="form-group mb-4">
-                  <label className="form-label">Data</label>
+                  <label htmlFor="booking-date" className="form-label">Data</label>
                   <div className="relative">
                     <CalendarDays size={18} className="absolute left-12 top-13 text-muted" />
-                    <input type="date" className="form-input pl-40"
+                    <input type="date" id="booking-date" className="form-input pl-40"
                       min={todayStr} 
                       max={maxDateStr}
                       value={formData.date} 
@@ -216,11 +216,11 @@ export default function Prenota() {
                 </div>
                 
                 <div className="form-group mb-4">
-                  <label className="form-label">Numero di persone</label>
+                  <label htmlFor="booking-guests" className="form-label">Numero di persone</label>
                   <div className="relative">
                     <Users size={18} className="absolute left-12 top-13 text-muted" />
                     <div className="form-group">
-                      <select className="form-select pl-40" value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
+                      <select id="booking-guests" className="form-select pl-40" value={formData.guests} onChange={e => setFormData({...formData, guests: Number(e.target.value)})}>
                         {[...Array(maxPeople)].map((_, i) => (
                           <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'Persona' : 'Persone'}</option>
                         ))}
@@ -253,23 +253,23 @@ export default function Prenota() {
 
                 <div className="booking-form-grid mb-4">
                   <div className="form-group">
-                    <label className="form-label">Nome e Cognome *</label>
-                    <input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                    <label htmlFor="booking-name" className="form-label">Nome e Cognome *</label>
+                    <input type="text" id="booking-name" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Telefono *</label>
-                    <input type="tel" className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                    <label htmlFor="booking-phone" className="form-label">Telefono *</label>
+                    <input type="tel" id="booking-phone" className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                   </div>
                 </div>
                 
                 <div className="form-group mb-4">
-                  <label className="form-label">Email (opzionale)</label>
-                  <input type="email" className="form-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Per ricevere la conferma" />
+                  <label htmlFor="booking-email" className="form-label">Email (opzionale)</label>
+                  <input type="email" id="booking-email" className="form-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Per ricevere la conferma" />
                 </div>
 
                 <div className="form-group mb-4">
-                  <label className="form-label">Note / Allergie (opzionale)</label>
-                  <textarea className="form-textarea" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}></textarea>
+                  <label htmlFor="booking-notes" className="form-label">Note / Allergie (opzionale)</label>
+                  <textarea id="booking-notes" className="form-textarea" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}></textarea>
                 </div>
 
                 <div className="flex gap-3 mt-4">

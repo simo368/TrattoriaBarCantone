@@ -29,6 +29,7 @@ export default function Header() {
           <nav className="nav-links" aria-label="Navigazione principale">
             <Link to="/chi-siamo">Chi siamo</Link>
             <Link to="/menu">Menù</Link>
+            <Link to="/chi-siamo">Galleria</Link>
             <Link to="/contatti">Dove siamo</Link>
             {settings.phone && (
               <a href={settings.phoneLink || `tel:${settings.phone}`} className="nav-phone">
@@ -49,9 +50,10 @@ export default function Header() {
           </button>
         </div>
       </header>
-      <div className={`nav-panel ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
+      <div className={`nav-panel ${menuOpen ? 'open' : ''} ${scrolled ? 'scrolled' : ''}`} aria-hidden={!menuOpen}>
         <Link to="/chi-siamo">Chi siamo</Link>
         <Link to="/menu">Menù</Link>
+        <Link to="/chi-siamo">Galleria</Link>
         <Link to="/contatti">Dove siamo</Link>
         {settings.phone && (
           <a href={settings.phoneLink || `tel:${settings.phone}`}>
