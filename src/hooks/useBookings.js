@@ -6,7 +6,7 @@ import {
   runTransaction
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { requestBookingConfirmation, requestBookingCancellation } from '../services/notificationService';
+import { requestBookingConfirmation, requestBookingCancellation, requestBookingReceived } from '../services/notificationService';
 import { getSettingsOnce } from './useSettings';
 
 // ---------------------------------------------------------
@@ -97,7 +97,7 @@ export function useBookings(dateFilter = null) {
 
       const booking = {
         ...data,
-        status: BOOKING_STATUS.CONFIRMED,
+        status: BOOKING_STATUS.PENDING,
         emailStatus: 'pending',
         createdAt: serverTimestamp(),
       };
@@ -106,11 +106,11 @@ export function useBookings(dateFilter = null) {
       tx.set(occupancyRef, { covers: newTotal, date, time }, { merge: true });
     });
 
-    const withId = { ...data, status: BOOKING_STATUS.CONFIRMED, createdAt: new Date().toISOString(), id: bookingRef.id };
+    const withId = { ...data, status: BOOKING_STATUS.PENDING, createdAt: new Date().toISOString(), id: bookingRef.id };
     
-    // Innesco asincrono del sistema notifiche
+    // Innesco asincrono del sistema notifiche (Ricezione)
     getSettingsOnce().then(settings => {
-      requestBookingConfirmation(bookingRef.id, withId, settings);
+      requestBookingReceived(bookingRef.id, withId, settings);
     }).catch(console.warn);
 
     return bookingRef.id;
@@ -128,10 +128,30 @@ export async function deleteBooking(id) {
 }
 
 export async function updateBookingStatus(id, newStatus) {
-  await updateDoc(doc(db, 'bookings', id), {
+  const bookingRef = doc(db, 'bookings', id);
+  let bookingData = null;
+  try {
+    const snap = await getDoc(bookingRef);
+    if (snap.exists()) bookingData = snap.data();
+  } catch(e) {
+    console.error("Error fetching booking to update status:", e);
+  }
+
+  await updateDoc(bookingRef, {
     status: newStatus,
     updatedAt: serverTimestamp()
   });
+
+  if (bookingData && bookingData.email) {
+    getSettingsOnce().then(settings => {
+      const updatedBookingData = { ...bookingData, status: newStatus };
+      if (newStatus === BOOKING_STATUS.CONFIRMED && bookingData.status !== BOOKING_STATUS.CONFIRMED) {
+        requestBookingConfirmation(id, updatedBookingData, settings);
+      } else if (newStatus === BOOKING_STATUS.CANCELLED && bookingData.status !== BOOKING_STATUS.CANCELLED) {
+        requestBookingCancellation(id, updatedBookingData, settings);
+      }
+    }).catch(console.warn);
+  }
 }
 
 export async function getBookingById(id) {

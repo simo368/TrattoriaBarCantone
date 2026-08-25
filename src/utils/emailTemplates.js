@@ -91,3 +91,13 @@ export const getCancelledTemplate = (booking, settings) => {
   `;
   return buildEmail("Prenotazione Cancellata", content, settings);
 };
+
+export const getPendingTemplate = (booking, settings) => {
+  const content = `
+    <h2>Richiesta Ricevuta</h2>
+    <p>Gentile <strong>${booking.name}</strong>,</p>
+    <p>Abbiamo ricevuto la tua richiesta di prenotazione per <strong>${booking.guests} persone</strong>, prevista per il <strong><span style="text-transform: capitalize;">${formatBookingDate(booking.date)}</span></strong> alle ore <strong>${booking.time}</strong>.</p>
+    <p>La richiesta è stata presa in carico e ti risponderemo il prima possibile per confermare la disponibilità.</p>
+  `;
+  return buildEmail("Richiesta di Prenotazione Ricevuta", content, settings);
+};
