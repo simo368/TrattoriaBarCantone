@@ -1,20 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useSettings } from '../hooks/useSettings';
-import { useMenu } from '../hooks/useMenu';
 import { useGallery } from '../hooks/useGallery';
 import { isOpen } from '../utils/availability';
-import { Clock, MapPin, Utensils, Phone, Star, ArrowRight } from 'lucide-react';
+import { Clock, MapPin, Phone, Star } from 'lucide-react';
 
 export default function Home() {
   const { settings } = useSettings();
-  const { menu, loading: menuLoading } = useMenu();
   const { images, loading: galleryLoading } = useGallery();
-
-  const signatureDishes = [];
-  if (!menuLoading) {
-    const allDishes = [...(menu.primi || []), ...(menu.secondi || [])].filter(d => d.active);
-    signatureDishes.push(...allDishes.slice(0, 4));
-  }
 
   const galleryPhotos = !galleryLoading ? images.filter(img => img.active).slice(0, 4) : [];
 
@@ -85,76 +77,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 3. IDENTITÀ (Immagine grande, testo essenziale) */}
-      <section className="section about">
-        <div className="container split gap-lg">
-          <div className="img-frame order-1">
-            <img 
-              src={galleryPhotos.length > 1 ? galleryPhotos[1].url : "./img/hero.jpg"} 
-              alt="Atmosfera e dettagli" 
-              loading="lazy" 
-              className="img-tall no-radius"
-            />
-          </div>
-          <div className="about-copy order-0 pr-5">
-            <h2 className="title-lg mb-4">La nostra storia.</h2>
-            <p className="text-lead text-forest-dark">
+      {/* 3/4. LA NOSTRA STORIA & GALLERIA (Uniti) */}
+      <section className="section py-xl bg-crema-chiaro">
+        <div className="container">
+          <div className="center max-w-md mx-auto mb-xl">
+            <h2 className="title-xl mb-4">La nostra storia.</h2>
+            <p className="text-lead text-forest-dark mb-5">
               {settings.site?.metaDescription || settings.description || "La nostra cucina è un atto d'amore per il territorio. Sfoglia ruvida, sughi lenti e il sorriso di chi ti aspetta a casa."}
             </p>
-            <Link to="/chi-siamo" className="btn btn-outline mt-5 btn-lg">
+            <Link to="/chi-siamo" className="btn btn-outline btn-lg">
               Scopri la trattoria
             </Link>
           </div>
-        </div>
-      </section>
 
-      {/* 4. PIATTI FIRMA (Tipografia Raffinata) */}
-      <section className="section bg-crema-dark py-xl">
-        <div className="container">
-          <div className="center mb-5">
-            <h2 className="title-xl">La Tradizione.</h2>
-          </div>
-
-          {!menuLoading && signatureDishes.length > 0 && (
-            <div className="signature-menu-list">
-              {signatureDishes.map(dish => (
-                <div key={dish.id} className="signature-menu-item">
-                  <div className="signature-menu-info">
-                    <h3 className="signature-menu-title">{dish.name}</h3>
-                    {dish.description && <p className="signature-menu-desc">{dish.description}</p>}
-                  </div>
-                  <span className="signature-menu-price">
-                    € {Number(dish.price).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="center mt-5">
-            <Link to="/menu" className="link-with-icon text-lg text-forest fw-bold underline underline-offset">
-              Sfoglia l'intero menù <ArrowRight size={20} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. MENU FISSO (Hero Secondaria) */}
-      <section className="section menu-fisso-hero bg-forest flex-center">
-        <div className="container center relative z-1 text-white">
-          <span className="eyebrow text-gold mb-4">Pausa Pranzo</span>
-          <h2 className="title-xxl text-white mb-4">Menù Fisso a {settings?.prices?.menuFisso || 15}€</h2>
-          <p className="text-lead text-white-70 max-w-sm mx-auto">
-            Primo, secondo, contorno, acqua, vino e caffè. Dal lunedì al venerdì.
-          </p>
-        </div>
-      </section>
-
-      <section className="section py-xl bg-crema-chiaro">
-        <div className="container">
-          <div className="center mb-5">
-            <h2 className="title-xl">L'Atmosfera.</h2>
-          </div>
           <div className="editorial-gallery">
             {galleryPhotos.length > 0 ? (
               galleryPhotos.map((photo, index) => (

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ArrowRight } from 'lucide-react';
 import { useGallery } from '../hooks/useGallery';
+import { useMenu } from '../hooks/useMenu';
 
 export default function ChiSiamo() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -9,6 +10,13 @@ export default function ChiSiamo() {
   
   const { images, loading } = useGallery();
   const activeImages = images ? images.filter(img => img.active) : [];
+  
+  const { menu, loading: menuLoading } = useMenu();
+  const signatureDishes = [];
+  if (!menuLoading && menu) {
+    const allDishes = [...(menu.primi || []), ...(menu.secondi || [])].filter(d => d.active);
+    signatureDishes.push(...allDishes.slice(0, 4));
+  }
   
   const gallery = (!loading && activeImages.length > 0) 
     ? activeImages.map(img => ({ src: img.url, label: img.title || '' }))
@@ -110,6 +118,37 @@ export default function ChiSiamo() {
               <p className="text-white-70">Un'accoglienza informale sotto il cielo della campagna.</p>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* PIATTI FIRMA (Tipografia Raffinata) - Spostata dalla Home */}
+      <section className="section bg-crema-dark py-xl">
+        <div className="container">
+          <div className="center mb-5">
+            <h2 className="title-xl">La Tradizione.</h2>
+          </div>
+
+          {!menuLoading && signatureDishes.length > 0 && (
+            <div className="signature-menu-list">
+              {signatureDishes.map(dish => (
+                <div key={dish.id} className="signature-menu-item">
+                  <div className="signature-menu-info">
+                    <h3 className="signature-menu-title">{dish.name}</h3>
+                    {dish.description && <p className="signature-menu-desc">{dish.description}</p>}
+                  </div>
+                  <span className="signature-menu-price">
+                    € {Number(dish.price).toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="center mt-5">
+            <Link to="/menu" className="link-with-icon text-lg text-forest fw-bold underline underline-offset">
+              Sfoglia l'intero menù <ArrowRight size={20} />
+            </Link>
           </div>
         </div>
       </section>

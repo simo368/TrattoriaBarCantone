@@ -1500,8 +1500,8 @@
   .public-app .footer-grid { grid-template-columns: 1fr; gap: 40px; }
   .public-app .footer-grid > *:first-child { grid-column: span 1; }
   
-  .public-app .editorial-gallery { grid-template-columns: 1fr; gap: 16px; }
-  .public-app .editorial-img-wrap { grid-column: span 1 !important; margin-top: 0 !important; height: 350px !important; }
+  .public-app .editorial-gallery { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .public-app .editorial-img-wrap { grid-column: span 1 !important; margin-top: 0 !important; height: 220px !important; border-radius: var(--radius-sm); }
   
   .public-app .menu-layout { grid-template-columns: 1fr; gap: 40px; }
   .public-app .sticky-inner { position: static; }
