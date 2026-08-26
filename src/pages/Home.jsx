@@ -30,7 +30,7 @@ export default function Home() {
         <div className="container">
           <div className="hero-copy">
             <div className="eyebrow">{settings.address?.city} · Dal 1968</div>
-            <h1 className="hero-title">
+            <h1 className="hero-title text-white">
               Trattoria <br/>
               <em>Bar Cantone.</em>
             </h1>

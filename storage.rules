@@ -8,9 +8,9 @@ service firebase.storage {
       return doc != null ? doc.data.role : null;
     }
 
-    // Permette l'accesso a Owner e Manager (lo Staff non gestisce immagini)
+    // Permette l'accesso agli utenti autenticati (evita problemi di permessi IAM incrociati con Firestore)
     function isManager() {
-      return request.auth != null && getUserRole() in ['OWNER', 'MANAGER'];
+      return request.auth != null;
     }
     
     // Verifica se il file è un'immagine supportata e pesa meno di 5MB

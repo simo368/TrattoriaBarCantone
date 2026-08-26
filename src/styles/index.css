@@ -1317,7 +1317,7 @@
 .public-app .max-w-md { max-width: 800px; }
 
 /* ── COMPONENTI SPECIFICI HOME/UTILS ─────────────────── */
-.public-app .hero-title { font-size: clamp(2.5rem, 10vw, 5.5rem); line-height: 1; color: #fff; }
+.public-app .hero-title { font-size: clamp(2.5rem, 10vw, 5.5rem); line-height: 1; }
 .public-app .title-md { font-size: 1.5rem; color: var(--c-forest); font-family: var(--font-serif); }
 .public-app .title-lg { font-size: 3rem; color: var(--c-forest); font-family: var(--font-serif); }
 .public-app .title-xl { font-size: 3.5rem; color: var(--c-forest); font-family: var(--font-serif); }
@@ -1478,7 +1478,24 @@
   
   .public-app .reviews-grid { grid-template-columns: 1fr; }
   
-  .public-app .contact-grid { grid-template-columns: 1fr; }
+  .public-app .contact-grid { grid-template-columns: 1fr; text-align: center; }
+  
+  .public-app .schedule-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+  }
+
+  .public-app .contact-links {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .public-app .split > div {
+    text-align: center;
+  }
   
   .public-app .footer-grid { grid-template-columns: 1fr; gap: 40px; }
   .public-app .footer-grid > *:first-child { grid-column: span 1; }

@@ -100,7 +100,8 @@ export default function Galleria() {
       }, 
       (error) => {
         setUploadModal(prev => ({ ...prev, isUploading: false }));
-        toast.error("Errore di caricamento.");
+        toast.error("Errore di caricamento: " + (error.message || "riprova."));
+        console.error("Upload error:", error);
       }, 
       async () => {
         try {

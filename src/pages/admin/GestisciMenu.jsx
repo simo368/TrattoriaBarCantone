@@ -113,7 +113,8 @@ export default function GestisciMenu() {
       }, 
       (error) => {
         setIsUploading(false);
-        toast.error("Errore durante l'upload");
+        toast.error("Errore durante l'upload: " + (error.message || "riprova."));
+        console.error("Upload error:", error);
       }, 
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
