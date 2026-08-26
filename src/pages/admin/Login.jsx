@@ -19,7 +19,7 @@ export default function AdminLogin() {
         <div className="login-card">
           <div className="login-logo"><div className="logo">Accesso <span>non autorizzato</span></div></div>
           <p className="text-muted">Questo account non ha un ruolo attivo per il pannello. Chiedi al proprietario di abilitarti.</p>
-          <button type="button" className="btn btn-primary btn-full" onClick={logout}>Accedi con un altro account</button>
+          <button type="button" className="admin-btn admin-btn-primary admin-btn-full" onClick={logout}>Accedi con un altro account</button>
         </div>
       </div>
     );
@@ -68,7 +68,7 @@ export default function AdminLogin() {
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary btn-full" disabled={submitting}>
+          <button type="submit" className="admin-btn admin-btn-primary admin-btn-full" disabled={submitting}>
             {submitting ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
