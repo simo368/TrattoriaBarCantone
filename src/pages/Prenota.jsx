@@ -50,9 +50,9 @@ export default function Prenota() {
     if (!formData.date) return [];
     const slots = getAvailableSlots(selectedDate, settings, bookings, formData.guests);
     
-    // Filtro orari passati o non conformi al minAdvanceHours
-    const minAdvanceHours = settings.bookingRules?.minAdvanceHours || 0;
-    const minMinutes = (now.getHours() + minAdvanceHours) * 60 + now.getMinutes();
+    // Filtro orari passati o non conformi al minAdvanceMinutes (default 30 min)
+    const minAdvanceMinutes = settings.bookingRules?.minAdvanceMinutes !== undefined ? settings.bookingRules.minAdvanceMinutes : 30;
+    const minMinutes = (now.getHours() * 60) + now.getMinutes() + minAdvanceMinutes;
 
     if (!isToday) return slots;
     return slots.filter(slot => {
@@ -68,9 +68,11 @@ export default function Prenota() {
     if (step === 1 && (!formData.date || !formData.time)) return toast.error("Seleziona data e orario");
     if (step === 1 && isClosed) return toast.error("Il locale è chiuso in questa data");
     if (step === 1 && isToday) {
-      const minAdvanceHours = settings.bookingRules?.minAdvanceHours || 0;
+      const minAdvanceMinutes = settings.bookingRules?.minAdvanceMinutes !== undefined ? settings.bookingRules.minAdvanceMinutes : 30;
       const [h, m] = formData.time.split(':').map(Number);
-      if ((h * 60 + m) <= (now.getHours() + minAdvanceHours) * 60 + now.getMinutes()) return toast.error("Orario non più disponibile");
+      const selectedMinutes = h * 60 + m;
+      const thresholdMinutes = (now.getHours() * 60) + now.getMinutes() + minAdvanceMinutes;
+      if (selectedMinutes <= thresholdMinutes) return toast.error("Orario non più disponibile per il preavviso minimo");
     }
     if (step === 2 && !formData.guests) return toast.error("Seleziona il numero di persone");
     setStep(step + 1);
