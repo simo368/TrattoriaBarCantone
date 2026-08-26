@@ -323,6 +323,37 @@
 .admin-badge-info { background: var(--admin-info-light); color: var(--admin-info); }
 .admin-badge-default { background: var(--admin-bg); color: var(--admin-text-muted); border: 1px solid var(--admin-border); }
 
+/* Tabs / Filters */
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-muted);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-tab:hover {
+  background-color: var(--admin-bg);
+  color: var(--admin-text-main);
+  border-color: var(--admin-text-muted);
+}
+
+.admin-tab.active {
+  background-color: var(--admin-primary);
+  color: white;
+  border-color: var(--admin-primary);
+  box-shadow: var(--admin-shadow-sm);
+}
+
 /* Buttons */
 .admin-btn {
   display: inline-flex;
@@ -609,7 +640,7 @@ textarea.admin-input {
 .admin-form-stack { display: flex; flex-direction: column; gap: 16px; }
 
 .admin-calendar-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-.admin-calendar-day { appearance: none; text-align: left; }
+.admin-calendar-day { appearance: none; text-align: left; border: none; outline: none; padding: 0; margin: 0; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
