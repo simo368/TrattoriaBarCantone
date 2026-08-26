@@ -88,8 +88,9 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow create, read, update, delete: if isStaff();
-      allow delete: if isStaff(); // Lo staff può cancellare
+      allow read, delete: if isStaff();
+      allow create: if isStaff() || isValidBookingCreate();
+      allow update: if isStaff() || isPublicCancel();
     }
 
     match /menu/{itemId} {

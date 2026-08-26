@@ -1433,7 +1433,7 @@
 .public-app .grid-4cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 48px; }
 
 .public-app .masonry-gallery { column-count: 3; column-gap: 40px; width: 100%; }
-.public-app .masonry-item-btn { display: block; width: 100%; margin-bottom: 40px; break-inside: avoid; background: none; border: none; padding: 0; cursor: pointer; overflow: hidden; }
+.public-app .masonry-item-btn { display: inline-block; width: 100%; margin-bottom: 40px; break-inside: avoid; page-break-inside: avoid; background: none; border: none; padding: 0; cursor: pointer; overflow: hidden; vertical-align: top; }
 .public-app .masonry-img { width: 100%; height: auto; display: block; transition: transform 0.8s ease; }
 .public-app .masonry-item-btn:hover .masonry-img { transform: scale(1.03); }
 
